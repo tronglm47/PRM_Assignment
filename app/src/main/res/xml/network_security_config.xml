@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Cho phép HTTPS đến Heroku -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">ev-maintenance-9bd58b96744e.herokuapp.com</domain>
+    </domain-config>
+
+    <!-- Cho phép HTTP đến localhost (cho test local) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>
+
