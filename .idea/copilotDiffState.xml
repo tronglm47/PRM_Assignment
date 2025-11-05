@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/prm_assignment/MainActivity.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/prm_assignment/MainActivity.kt" />
+              <option name="originalContent" value="package com.example.prm_assignment&#10;&#10;import android.os.Bundle&#10;import androidx.activity.ComponentActivity&#10;import androidx.activity.compose.setContent&#10;import androidx.activity.enableEdgeToEdge&#10;import androidx.compose.foundation.layout.fillMaxSize&#10;import androidx.compose.foundation.layout.padding&#10;import androidx.compose.material3.Scaffold&#10;import androidx.compose.material3.Text&#10;import androidx.compose.runtime.Composable&#10;import androidx.compose.ui.Modifier&#10;import androidx.compose.ui.tooling.preview.Preview&#10;import com.example.prm_assignment.ui.theme.PRM_AssignmentTheme&#10;&#10;class MainActivity : ComponentActivity() {&#10;    override fun onCreate(savedInstanceState: Bundle?) {&#10;        super.onCreate(savedInstanceState)&#10;        enableEdgeToEdge()&#10;        setContent {&#10;            PRM_AssignmentTheme {&#10;                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -&gt;&#10;                    Greeting(&#10;                        name = &quot;Android&quot;,&#10;                        modifier = Modifier.padding(innerPadding)&#10;                    )&#10;                }&#10;            }&#10;        }&#10;    }&#10;}&#10;&#10;@Composable&#10;fun Greeting(name: String, modifier: Modifier = Modifier) {&#10;    Text(&#10;        text = &quot;Hello $name!&quot;,&#10;        modifier = modifier&#10;    )&#10;}&#10;&#10;@Preview(showBackground = true)&#10;@Composable&#10;fun GreetingPreview() {&#10;    PRM_AssignmentTheme {&#10;        Greeting(&quot;Android&quot;)&#10;    }&#10;}" />
+              <option name="updatedContent" value="package com.example.prm_assignment&#10;&#10;import android.os.Bundle&#10;import androidx.activity.ComponentActivity&#10;import androidx.activity.compose.setContent&#10;import androidx.activity.enableEdgeToEdge&#10;import androidx.compose.foundation.layout.fillMaxSize&#10;import androidx.compose.foundation.layout.padding&#10;import androidx.compose.material3.Scaffold&#10;import androidx.compose.runtime.Composable&#10;import androidx.compose.ui.Modifier&#10;import androidx.compose.ui.tooling.preview.Preview&#10;import com.example.prm_assignment.ui.LoginScreen&#10;import com.example.prm_assignment.ui.theme.PRM_AssignmentTheme&#10;&#10;class MainActivity : ComponentActivity() {&#10;    override fun onCreate(savedInstanceState: Bundle?) {&#10;        super.onCreate(savedInstanceState)&#10;        enableEdgeToEdge()&#10;        setContent {&#10;            PRM_AssignmentTheme {&#10;                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -&gt;&#10;                    LoginScreen(&#10;                        modifier = Modifier.padding(innerPadding),&#10;                        onLogin = { email, password -&gt;&#10;                            // TODO: Xử lý đăng nhập&#10;                            println(&quot;Login with email: $email, password: $password&quot;)&#10;                        }&#10;                    )&#10;                }&#10;            }&#10;        }&#10;    }&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
