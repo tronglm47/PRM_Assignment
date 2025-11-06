@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.PRM_Assignment" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Use Material Components DayNight theme without ActionBar -->
+    <style name="Theme.PRM_Assignment" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
 </resources>
