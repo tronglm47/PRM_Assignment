@@ -51,10 +51,17 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // Note: UI for HomeActivity uses XML views; no additional flags needed
     }
 }
 
 dependencies {
+
+    // Java XML UI dependencies
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+    implementation(libs.androidx.fragment.ktx)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -81,6 +88,7 @@ dependencies {
 
     // DataStore for token storage
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation(libs.androidx.appcompat)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

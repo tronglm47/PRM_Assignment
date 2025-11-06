@@ -1,5 +1,6 @@
 package com.example.prm_assignment
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.example.prm_assignment.HomeActivity
 import com.example.prm_assignment.ui.AuthViewModel
-import com.example.prm_assignment.ui.HomePage
 import com.example.prm_assignment.ui.LoginScreen
 import com.example.prm_assignment.ui.theme.PRM_AssignmentTheme
 
@@ -25,25 +26,24 @@ class MainActivity : ComponentActivity() {
             PRM_AssignmentTheme {
                 val authState by authViewModel.authState.collectAsState()
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                // Auto-navigate to HomeActivity when login is successful
+                LaunchedEffect(authState.isLoggedIn) {
                     if (authState.isLoggedIn) {
-                        HomePage(
-                            modifier = Modifier.padding(innerPadding),
-                            userProfile = authState.userProfile,
-                            onLogout = {
-                                authViewModel.logout()
-                            }
-                        )
-                    } else {
-                        LoginScreen(
-                            modifier = Modifier.padding(innerPadding),
-                            viewModel = authViewModel,
-                            onLoginSuccess = {
-                                // Tự động chuyển sang HomePage khi login thành công
-                                authViewModel.loadUserProfile()
-                            }
-                        )
+                        val intent = Intent(this@MainActivity, Class.forName("com.example.prm_assignment.HomeActivity"))
+                        startActivity(intent)
+                        finish()
                     }
+                }
+
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    LoginScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        viewModel = authViewModel,
+                        onLoginSuccess = {
+                            // Tự động chuyển sang HomeActivity khi login thành công
+                            authViewModel.loadUserProfile()
+                        }
+                    )
                 }
             }
         }
