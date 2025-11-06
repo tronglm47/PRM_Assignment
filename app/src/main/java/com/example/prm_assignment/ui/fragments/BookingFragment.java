@@ -22,10 +22,13 @@ import com.example.prm_assignment.data.model.AppointmentRequest;
 import com.example.prm_assignment.data.model.BaseResponse;
 import com.example.prm_assignment.data.model.CenterModel;
 import com.example.prm_assignment.data.model.CentersResponse;
+import com.example.prm_assignment.data.model.CustomerResponse;
 import com.example.prm_assignment.data.remote.AppointmentApi;
 import com.example.prm_assignment.data.remote.AppointmentRetrofitClient;
 import com.example.prm_assignment.data.remote.CenterApi;
 import com.example.prm_assignment.data.remote.CenterRetrofitClient;
+import com.example.prm_assignment.data.remote.CustomerApi;
+import com.example.prm_assignment.data.remote.CustomerRetrofitClient;
 
 import java.util.Calendar;
 import java.util.List;
@@ -51,6 +54,7 @@ public class BookingFragment extends Fragment {
 
     private AppointmentApi appointmentApi;
     private CenterApi centerApi;
+    private CustomerApi customerApi;
     private TokenHelper tokenHelper;
 
     public static BookingFragment newInstance(String vehicleId) {
@@ -69,6 +73,7 @@ public class BookingFragment extends Fragment {
         }
         appointmentApi = AppointmentRetrofitClient.getInstance().getAppointmentApi();
         centerApi = CenterRetrofitClient.getInstance().getCenterApi();
+        customerApi = CustomerRetrofitClient.getInstance().getCustomerApi();
         tokenHelper = new TokenHelper(requireContext());
     }
 
@@ -209,49 +214,82 @@ public class BookingFragment extends Fragment {
         }
 
         progressBar.setVisibility(View.VISIBLE);
-
-
-        String customerId = "690796b3a7b4303a78b7159c";
+        btnConfirm.setEnabled(false);
 
         // Tạo thời gian ISO
         String startTime = selectedDate + "T" + selectedTime + ":00.000Z";
-
         String[] parts = selectedTime.split(":");
         int hour = Integer.parseInt(parts[0]);
         int minute = Integer.parseInt(parts[1]);
         int endHour = (hour + 2) % 24;
         String endTime = String.format(Locale.getDefault(), "%sT%02d:%02d:00.000Z", selectedDate, endHour, minute);
 
-        AppointmentRequest request = new AppointmentRequest(
-                null,
-                customerId,
-                vehicleId,
-                selectedCenterId,
-                startTime,
-                endTime,
-                "pending"
-        );
+        // Bước 1️⃣: Lấy userId từ /auth/profile
+        tokenHelper.getUserIdFromProfile(userId -> {
+            if (userId == null) {
+                progressBar.setVisibility(View.GONE);
+                btnConfirm.setEnabled(true);
+                Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+            }
 
-        tokenHelper.getTokenAndExecute(token -> {
-            appointmentApi.createAppointment("Bearer " + token, request)
-                    .enqueue(new Callback<BaseResponse>() {
-                        @Override
-                        public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                            progressBar.setVisibility(View.GONE);
-                            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                                Toast.makeText(getContext(), "✅ Đặt lịch thành công!", Toast.LENGTH_SHORT).show();
-                                requireActivity().onBackPressed();
-                            } else {
-                                Toast.makeText(getContext(), "❌ Không thể tạo lịch hẹn", Toast.LENGTH_SHORT).show();
+            // Bước 2️⃣: Lấy customerId bằng userId
+            tokenHelper.getTokenAndExecute(token -> {
+                customerApi.getCustomerByUserId("Bearer " + token, userId)
+                        .enqueue(new Callback<CustomerResponse>() {
+                            @Override
+                            public void onResponse(Call<CustomerResponse> call, Response<CustomerResponse> response) {
+                                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                                    String customerId = response.body().getData().getId();
+
+                                    // Bước 3️⃣: Gửi request tạo appointment
+                                    AppointmentRequest request = new AppointmentRequest(
+                                            null,
+                                            customerId,
+                                            vehicleId,
+                                            selectedCenterId,
+                                            startTime,
+                                            endTime,
+                                            "pending"
+                                    );
+
+                                    appointmentApi.createAppointment("Bearer " + token, request)
+                                            .enqueue(new Callback<BaseResponse>() {
+                                                @Override
+                                                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                                                    progressBar.setVisibility(View.GONE);
+                                                    btnConfirm.setEnabled(true);
+                                                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                                                        Toast.makeText(getContext(), "✅ Đặt lịch thành công!", Toast.LENGTH_SHORT).show();
+                                                        requireActivity().onBackPressed();
+                                                    } else {
+                                                        Toast.makeText(getContext(), "❌ Không thể tạo lịch hẹn", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onFailure(Call<BaseResponse> call, Throwable t) {
+                                                    progressBar.setVisibility(View.GONE);
+                                                    btnConfirm.setEnabled(true);
+                                                    Toast.makeText(getContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
+
+                                } else {
+                                    progressBar.setVisibility(View.GONE);
+                                    btnConfirm.setEnabled(true);
+                                    Toast.makeText(getContext(), "Không tìm thấy thông tin khách hàng", Toast.LENGTH_SHORT).show();
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onFailure(Call<BaseResponse> call, Throwable t) {
-                            progressBar.setVisibility(View.GONE);
-                            Toast.makeText(getContext(), "Lỗi mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                            @Override
+                            public void onFailure(Call<CustomerResponse> call, Throwable t) {
+                                progressBar.setVisibility(View.GONE);
+                                btnConfirm.setEnabled(true);
+                                Toast.makeText(getContext(), "Lỗi khi lấy customerId: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            });
+            return null;
         });
     }
 }
