@@ -7,11 +7,11 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import java.util.concurrent.TimeUnit;
 
-public class CustomerRetrofitClient {
-    private static CustomerRetrofitClient instance;
-    private final CustomerApi customerApi;
+public class VehicleSubscriptionRetrofitClient {
+    private static VehicleSubscriptionRetrofitClient instance;
+    private final VehicleSubscriptionApi vehicleSubscriptionApi;
 
-    private CustomerRetrofitClient() {
+    private VehicleSubscriptionRetrofitClient() {
         String BASE_URL = BuildConfig.BASE_URL;
         if (!BASE_URL.endsWith("/")) {
             BASE_URL = BASE_URL + "/";
@@ -33,18 +33,18 @@ public class CustomerRetrofitClient {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        customerApi = retrofit.create(CustomerApi.class);
+        vehicleSubscriptionApi = retrofit.create(VehicleSubscriptionApi.class);
     }
 
-    public static synchronized CustomerRetrofitClient getInstance() {
+    public static synchronized VehicleSubscriptionRetrofitClient getInstance() {
         if (instance == null) {
-            instance = new CustomerRetrofitClient();
+            instance = new VehicleSubscriptionRetrofitClient();
         }
         return instance;
     }
 
-    public CustomerApi getCustomerApi() {
-        return customerApi;
+    public VehicleSubscriptionApi getVehicleSubscriptionApi() {
+        return vehicleSubscriptionApi;
     }
 }
 

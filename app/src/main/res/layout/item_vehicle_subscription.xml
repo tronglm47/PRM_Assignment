@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Vehicle Image Placeholder -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#E8F5E8">
+
+            <ImageView
+                android:id="@+id/ivVehicleImage"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_menu_directions"
+                android:scaleType="centerCrop"
+                android:contentDescription="Vehicle image" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Vehicle Info -->
+        <TextView
+            android:id="@+id/tvVehicleName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Honda City 2022"
+            android:textSize="18sp"
+            android:textColor="#2C5F2D"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/tvVehicleModel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Model: Honda City"
+            android:textSize="14sp"
+            android:textColor="#6B8E6B"
+            android:layout_marginBottom="8dp"
+            tools:ignore="HardcodedText" />
+
+        <!-- Package Info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="#FFF3E0"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/ic_menu_agenda"
+                app:tint="#FF9800"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="Package icon" />
+
+            <TextView
+                android:id="@+id/tvPackageName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Basic Maintenance Package"
+                android:textSize="13sp"
+                android:textColor="#E65100"
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+
+        <!-- Subscription Status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvSubscriptionStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Còn 25 ngày"
+                android:textSize="13sp"
+                android:textColor="#FF6B35"
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/tvKmInterval"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5.000 km"
+                android:textSize="12sp"
+                android:textColor="#6B8E6B"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:progress="65"
+            android:progressTint="#4A7C59"
+            android:progressBackgroundTint="#E8F5E8" />
+
+        <!-- Date Range -->
+        <TextView
+            android:id="@+id/tvDateRange"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="07/11/2025 - 07/12/2025"
+            android:textSize="11sp"
+            android:textColor="#9E9E9E"
+            android:layout_marginTop="8dp"
+            tools:ignore="HardcodedText" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
+
