@@ -3,4 +3,11 @@
     <string name="notification">Notification</string>
     <string name="search">Search</string>
     <string name="icon">Icon</string>
+    <string name="back">Back</string>
+    <string name="my_cars">My Cars</string>
+    <string name="car_image">Car image</string>
+    <string name="porsche_placeholder">Porsche 911</string>
+    <string name="reg_id_placeholder">1421451223</string>
+    <string name="reg_id_format">%s</string>
+    <string name="book_service">Book Service</string>
 </resources>

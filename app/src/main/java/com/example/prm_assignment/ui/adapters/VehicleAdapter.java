@@ -87,7 +87,9 @@ public class VehicleAdapter extends RecyclerView.Adapter<VehicleAdapter.VehicleV
         Vehicle vehicle = vehicleList.get(position);
 
         holder.tvCarModel.setText(vehicle.model);
-        holder.tvCarYear.setText(vehicle.year);
+        // Display VIN as "Reg ID: [VIN]" using string resource
+        String regIdText = holder.itemView.getContext().getString(R.string.reg_id_format, vehicle.vin);
+        holder.tvCarYear.setText(regIdText);
 
         // Load image using Glide
         if (vehicle.imageUrl != null && !vehicle.imageUrl.isEmpty()) {
@@ -130,7 +132,6 @@ public class VehicleAdapter extends RecyclerView.Adapter<VehicleAdapter.VehicleV
         ImageView ivCarImage;
         TextView tvCarModel;
         TextView tvCarYear;
-        TextView tvServiceIndicator;
         CardView btnBookService;
 
         public VehicleViewHolder(@NonNull View itemView) {
@@ -138,7 +139,6 @@ public class VehicleAdapter extends RecyclerView.Adapter<VehicleAdapter.VehicleV
             ivCarImage = itemView.findViewById(R.id.ivCarImage);
             tvCarModel = itemView.findViewById(R.id.tvCarModel);
             tvCarYear = itemView.findViewById(R.id.tvCarYear);
-            tvServiceIndicator = itemView.findViewById(R.id.tvServiceIndicator);
             btnBookService = itemView.findViewById(R.id.btnBookService);
         }
     }

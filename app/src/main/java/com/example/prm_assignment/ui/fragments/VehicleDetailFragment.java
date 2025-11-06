@@ -5,7 +5,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -13,7 +12,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
@@ -50,17 +48,13 @@ public class VehicleDetailFragment extends Fragment {
     private TextView tvModel;
     private TextView tvYear;
     private TextView tvVin;
-    private TextView tvPlateNumber;
     private TextView tvMileage;
     private TextView tvPrice;
-    private TextView tvLastServiceDate;
-    private TextView tvLastAlertMileage;
-    private TextView tvOwnerName;
-    private TextView tvOwnerAddress;
-    private CardView btnBookService;
+    private TextView tvOwner;
+    private TextView tvAddress;
+    private View btnBookService;
     private ProgressBar progressBar;
     private TextView tvError;
-    private ImageButton btnBack;
 
     public static VehicleDetailFragment newInstance(String vehicleId) {
         VehicleDetailFragment fragment = new VehicleDetailFragment();
@@ -91,14 +85,20 @@ public class VehicleDetailFragment extends Fragment {
         tokenHelper = new TokenHelper(requireContext());
 
         // Set click listeners
-        btnBack.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().onBackPressed();
-            }
-        });
-
         btnBookService.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Book Service feature coming soon!", Toast.LENGTH_SHORT).show();
+            if (vehicleId != null && !vehicleId.isEmpty()) {
+                BookingFragment bookingFragment = BookingFragment.newInstance(vehicleId);
+
+                if (getActivity() != null) {
+                    getActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, bookingFragment)
+                            .addToBackStack(null)
+                            .commit();
+                }
+            } else {
+                Toast.makeText(getContext(), "Invalid vehicle ID", Toast.LENGTH_SHORT).show();
+            }
         });
 
         // Fetch vehicle details
@@ -118,17 +118,13 @@ public class VehicleDetailFragment extends Fragment {
         tvModel = view.findViewById(R.id.tvModel);
         tvYear = view.findViewById(R.id.tvYear);
         tvVin = view.findViewById(R.id.tvVin);
-        tvPlateNumber = view.findViewById(R.id.tvPlateNumber);
         tvMileage = view.findViewById(R.id.tvMileage);
         tvPrice = view.findViewById(R.id.tvPrice);
-        tvLastServiceDate = view.findViewById(R.id.tvLastServiceDate);
-        tvLastAlertMileage = view.findViewById(R.id.tvLastAlertMileage);
-        tvOwnerName = view.findViewById(R.id.tvOwnerName);
-        tvOwnerAddress = view.findViewById(R.id.tvOwnerAddress);
+        tvOwner = view.findViewById(R.id.tvOwner);
+        tvAddress = view.findViewById(R.id.tvAddress);
         btnBookService = view.findViewById(R.id.btnBookService);
         progressBar = view.findViewById(R.id.progressBar);
         tvError = view.findViewById(R.id.tvError);
-        btnBack = view.findViewById(R.id.btnBack);
     }
 
     private void fetchVehicleDetails() {
@@ -191,11 +187,8 @@ public class VehicleDetailFragment extends Fragment {
             // VIN
             tvVin.setText(vehicle.getVin());
 
-            // Plate Number
-            tvPlateNumber.setText(vehicle.getPlateNumber());
-
             // Mileage
-            String mileage = String.format(Locale.getDefault(), "%.0f km", vehicle.getMileage());
+            String mileage = String.format(Locale.getDefault(), "%.0f", vehicle.getMileage());
             tvMileage.setText(mileage);
 
             // Price
@@ -203,21 +196,13 @@ public class VehicleDetailFragment extends Fragment {
             String price = currencyFormat.format(vehicle.getPrice());
             tvPrice.setText(price);
 
-            // Last Service Date
-            String formattedDate = formatDate(vehicle.getLastServiceDate());
-            tvLastServiceDate.setText(formattedDate);
-
-            // Last Alert Mileage
-            String lastAlertMileage = String.format(Locale.getDefault(), "%.0f km", vehicle.getLastAlertMileage());
-            tvLastAlertMileage.setText(lastAlertMileage);
-
             // Owner Information
             if (vehicle.getCustomerId() != null) {
-                tvOwnerName.setText(vehicle.getCustomerId().getCustomerName());
-                tvOwnerAddress.setText(vehicle.getCustomerId().getAddress());
+                tvOwner.setText(vehicle.getCustomerId().getCustomerName());
+                tvAddress.setText(vehicle.getCustomerId().getAddress());
             } else {
-                tvOwnerName.setText("Unknown");
-                tvOwnerAddress.setText("N/A");
+                tvOwner.setText("Unknown");
+                tvAddress.setText("N/A");
             }
 
             // Load Vehicle Image
