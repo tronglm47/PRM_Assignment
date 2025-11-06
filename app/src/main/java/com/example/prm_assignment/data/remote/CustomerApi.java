@@ -9,8 +9,7 @@ import retrofit2.http.Path;
 public interface CustomerApi {
     @GET("customers/user/{userId}")
     Call<CustomerResponse> getCustomerByUserId(
-            @Path("userId") String userId,
-            @Header("Authorization") String authHeader
+            @Header("Authorization") String authHeader,
+            @Path("userId") String userId
     );
 }
-

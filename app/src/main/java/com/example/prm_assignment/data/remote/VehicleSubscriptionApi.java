@@ -9,8 +9,7 @@ import retrofit2.http.Path;
 public interface VehicleSubscriptionApi {
     @GET("vehicle-subscriptions/customer/{customerId}")
     Call<VehicleSubscriptionResponse> getCustomerSubscriptions(
-            @Path("customerId") String customerId,
-            @Header("Authorization") String authHeader
+            @Header("Authorization") String authHeader,
+            @Path("customerId") String customerId
     );
 }
-

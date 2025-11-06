@@ -415,7 +415,7 @@ public class HomeFragment extends Fragment {
         com.example.prm_assignment.data.remote.VehicleSubscriptionRetrofitClient
                 .getInstance()
                 .getVehicleSubscriptionApi()
-                .getCustomerSubscriptions(customerId, authHeader)
+                .getCustomerSubscriptions(authHeader, customerId)
                 .enqueue(new Callback<com.example.prm_assignment.data.model.VehicleSubscriptionResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<com.example.prm_assignment.data.model.VehicleSubscriptionResponse> call,

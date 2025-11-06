@@ -108,9 +108,9 @@ class TokenHelper(private val context: Context) {
                                 return
                             }
 
-                            // Then get customerId from userId
+                            // Then get customerId from userId - FIX: Correct parameter order
                             val customerApi = com.example.prm_assignment.data.remote.CustomerRetrofitClient.getInstance().getCustomerApi()
-                            customerApi.getCustomerByUserId(userId, "Bearer $token").enqueue(object : Callback<com.example.prm_assignment.data.model.CustomerResponse> {
+                            customerApi.getCustomerByUserId("Bearer $token", userId).enqueue(object : Callback<com.example.prm_assignment.data.model.CustomerResponse> {
                                 override fun onResponse(
                                     call: Call<com.example.prm_assignment.data.model.CustomerResponse>,
                                     response: Response<com.example.prm_assignment.data.model.CustomerResponse>
