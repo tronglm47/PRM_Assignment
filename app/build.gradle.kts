@@ -90,6 +90,10 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation(libs.androidx.appcompat)
 
+    // Glide for image loading
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
