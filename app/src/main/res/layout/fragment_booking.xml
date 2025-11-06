@@ -22,10 +22,13 @@
                 android:id="@+id/btnBack"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
                 android:contentDescription="Trở về"
                 app:tint="@android:color/black" />
+
 
             <TextView
                 android:layout_width="wrap_content"
@@ -90,7 +93,19 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content" />
+
+
         </LinearLayout>
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Thời lượng dịch vụ: 2 giờ"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textStyle="italic"
+            android:paddingTop="4dp"
+            android:textSize="15sp"/>
+
 
         <ProgressBar
             android:id="@+id/progressBar"
