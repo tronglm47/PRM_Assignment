@@ -1,6 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/booking_container"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="24dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/white" />
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="Book Service"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 🔹 Chọn trung tâm -->
+        <TextView
+            android:text="Chọn trung tâm"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- 🔹 Container động để hiển thị danh sách trung tâm -->
+        <LinearLayout
+            android:id="@+id/centerContainer"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 🔹 Chọn ngày & giờ -->
+        <TextView
+            android:text="Chọn ngày và giờ"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:weightSum="2">
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:text="Chọn ngày"
+                android:background="@drawable/bg_box"
+                android:gravity="center"
+                android:padding="12dp"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+
+            <View
+                android:layout_width="16dp"
+                android:layout_height="match_parent" />
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:text="Chọn giờ"
+                android:background="@drawable/bg_box"
+                android:gravity="center"
+                android:padding="12dp"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btnConfirm"
+            android:text="Xác nhận đặt lịch"
+            android:backgroundTint="@color/navy_blue"
+            android:textColor="@color/white"
+            android:layout_marginTop="24dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+</ScrollView>
