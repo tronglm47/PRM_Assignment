@@ -235,7 +235,7 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "Profile API response received: " + response.code());
                 if (response.isSuccessful() && response.body() != null) {
                     ProfileResponse profileResponse = response.body();
-                    if (profileResponse.getSuccess() && profileResponse.getData() != null) {
+                    if (profileResponse.isSuccess() && profileResponse.getData() != null) {
                         String customerName = profileResponse.getData().getCustomerName();
                         String address = profileResponse.getData().getAddress();
                         Log.d(TAG, "Customer name from API: " + customerName);

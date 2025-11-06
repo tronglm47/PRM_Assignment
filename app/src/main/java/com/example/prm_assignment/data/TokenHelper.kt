@@ -2,7 +2,6 @@ package com.example.prm_assignment.data
 
 import android.content.Context
 import com.example.prm_assignment.data.model.ProfileResponse
-import com.example.prm_assignment.data.remote.ProfileApi
 import com.example.prm_assignment.data.remote.ProfileRetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +39,7 @@ class TokenHelper(private val context: Context) {
                         call: Call<ProfileResponse>,
                         response: Response<ProfileResponse>
                     ) {
-                        if (response.isSuccessful && response.body()?.success == true) {
+                        if (response.isSuccessful && response.body()?.isSuccess == true) {
                             // ✅ Lấy userId chính xác
                             val userId = response.body()?.data?.userId?.id
                             callback(userId)
