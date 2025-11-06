@@ -12,7 +12,9 @@ import com.example.prm_assignment.ui.fragments.BookingFragment;
 import com.example.prm_assignment.ui.fragments.ChatFragment;
 import com.example.prm_assignment.ui.fragments.HomeFragment;
 import com.example.prm_assignment.ui.fragments.ProfileFragment;
+import com.example.prm_assignment.ui.fragments.RecordsFragment;
 import com.example.prm_assignment.ui.fragments.SubscriptionFragment;
+import com.example.prm_assignment.ui.fragments.VehiclesFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class HomeActivity extends AppCompatActivity {
@@ -28,14 +30,11 @@ public class HomeActivity extends AppCompatActivity {
             if (itemId == R.id.nav_home) {
                 switchTo(new HomeFragment());
                 return true;
-            } else if (itemId == R.id.nav_chat) {
-                switchTo(new ChatFragment());
+            } else if (itemId == R.id.nav_vehicles) {
+                switchTo(new VehiclesFragment());
                 return true;
-            } else if (itemId == R.id.nav_subscription) {
-                switchTo(new SubscriptionFragment());
-                return true;
-            } else if (itemId == R.id.nav_booking) {
-                switchTo(new BookingFragment());
+            } else if (itemId == R.id.nav_records) {
+                switchTo(new RecordsFragment());
                 return true;
             } else if (itemId == R.id.nav_profile) {
                 switchTo(new ProfileFragment());
