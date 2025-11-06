@@ -82,9 +82,21 @@ public class VehiclesFragment extends Fragment implements VehicleAdapter.OnVehic
 
     @Override
     public void onBookServiceClick(VehicleAdapter.Vehicle vehicle) {
-        // Handle book service click
-        Toast.makeText(getContext(), "Book service for: " + vehicle.model, Toast.LENGTH_SHORT).show();
+        if (vehicle.id != null && !vehicle.id.isEmpty()) {
+            BookingFragment bookingFragment = BookingFragment.newInstance(vehicle.id);
+
+            if (getActivity() != null) {
+                getActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, bookingFragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        } else {
+            Toast.makeText(getContext(), "Invalid vehicle ID", Toast.LENGTH_SHORT).show();
+        }
     }
+
 
     private void fetchMyVehicles() {
         // Use TokenHelper to get token asynchronously
