@@ -17,12 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.prm_assignment.data.model.UserProfile
+import com.example.prm_assignment.data.model.ProfileData
 
 @Composable
 fun HomePage(
     modifier: Modifier = Modifier,
-    userProfile: UserProfile?,
+    userProfile: ProfileData?,
     onLogout: () -> Unit = {}
 ) {
     Column(
@@ -96,7 +96,7 @@ fun HomePage(
 
                     // User Name
                     Text(
-                        text = userProfile?.fullName ?: "User",
+                        text = userProfile?.customerName ?: "User",
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -108,7 +108,7 @@ fun HomePage(
 
                     // Email
                     Text(
-                        text = userProfile?.email ?: "email@example.com",
+                        text = userProfile?.userId?.email ?: "email@example.com",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray,
                         textAlign = TextAlign.Center
@@ -117,7 +117,7 @@ fun HomePage(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Phone (if available)
-                    if (!userProfile?.phoneNumber.isNullOrEmpty()) {
+                    if (!userProfile?.userId?.phone.isNullOrEmpty()) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -132,7 +132,7 @@ fun HomePage(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = userProfile?.phoneNumber ?: "",
+                                text = userProfile?.userId?.phone ?: "",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF4B9BFF)
                             )
@@ -166,9 +166,13 @@ fun HomePage(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     InfoRow(label = "ID", value = userProfile?.id ?: "N/A")
-                    InfoRow(label = "Email", value = userProfile?.email ?: "N/A")
-                    if (!userProfile?.phoneNumber.isNullOrEmpty()) {
-                        InfoRow(label = "Số điện thoại", value = userProfile?.phoneNumber ?: "N/A")
+                    InfoRow(label = "Tên khách hàng", value = userProfile?.customerName ?: "N/A")
+                    InfoRow(label = "Email", value = userProfile?.userId?.email ?: "N/A")
+                    if (!userProfile?.userId?.phone.isNullOrEmpty()) {
+                        InfoRow(label = "Số điện thoại", value = userProfile?.userId?.phone ?: "N/A")
+                    }
+                    if (!userProfile?.address.isNullOrEmpty()) {
+                        InfoRow(label = "Địa chỉ", value = userProfile?.address ?: "N/A")
                     }
                 }
             }
