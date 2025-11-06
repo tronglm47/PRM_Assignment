@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.prm_assignment.data.TokenManager
 import com.example.prm_assignment.data.model.LoginRequest
 import com.example.prm_assignment.data.model.ProfileResponse
+import com.example.prm_assignment.data.model.RegisterRequest
+import com.example.prm_assignment.data.model.VerifyOtpRequest
 import com.example.prm_assignment.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +20,9 @@ data class AuthState(
     val isLoggedIn: Boolean = false,
     val userProfile: ProfileResponse.ProfileData? = null,
     val errorMessage: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    // track email waiting for OTP verify
+    val pendingVerifyEmail: String? = null
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -107,6 +111,67 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 _authState.value = _authState.value.copy(
                     isLoading = false,
                     errorMessage = "Lỗi: ${e.localizedMessage ?: e.message}\n${e.stackTraceToString()}"
+                )
+            }
+        }
+    }
+
+    fun register(email: String, phone: String, password: String) {
+        viewModelScope.launch {
+            try {
+                _authState.value = _authState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
+                val request = RegisterRequest(email, phone, password)
+                val response = authApi.register(request)
+                // API chỉ trả message, không trả token => không đăng nhập ngay
+                if (response.isSuccess) {
+                    _authState.value = _authState.value.copy(
+                        isLoading = false,
+                        successMessage = response.message ?: "Đăng ký thành công. Nhập OTP để xác minh.",
+                        pendingVerifyEmail = email
+                    )
+                } else {
+                    _authState.value = _authState.value.copy(
+                        isLoading = false,
+                        errorMessage = response.message ?: "Đăng ký thất bại",
+                        pendingVerifyEmail = null
+                    )
+                }
+            } catch (e: Exception) {
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.localizedMessage ?: e.message,
+                    pendingVerifyEmail = null
+                )
+            }
+        }
+    }
+
+    fun verifyOtp(otp: String) {
+        viewModelScope.launch {
+            val email = _authState.value.pendingVerifyEmail
+            if (email.isNullOrEmpty()) {
+                _authState.value = _authState.value.copy(errorMessage = "Thiếu email để xác minh. Vui lòng đăng ký lại.")
+                return@launch
+            }
+            try {
+                _authState.value = _authState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
+                val response = authApi.verifyRegister(VerifyOtpRequest(email, otp))
+                if (response.isSuccess) {
+                    _authState.value = _authState.value.copy(
+                        isLoading = false,
+                        successMessage = response.message ?: "Xác minh thành công. Hãy đăng nhập.",
+                        pendingVerifyEmail = null
+                    )
+                } else {
+                    _authState.value = _authState.value.copy(
+                        isLoading = false,
+                        errorMessage = response.message ?: "Mã OTP không hợp lệ"
+                    )
+                }
+            } catch (e: Exception) {
+                _authState.value = _authState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.localizedMessage ?: e.message
                 )
             }
         }

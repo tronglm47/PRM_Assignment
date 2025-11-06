@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.sp
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: AuthViewModel? = null,
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    onNavigateRegister: () -> Unit = {}
 ) {
     val authState by viewModel?.authState?.collectAsState() ?: remember { mutableStateOf(AuthState()) }
 
@@ -224,7 +225,13 @@ fun LoginScreen(
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
+
+        TextButton(onClick = onNavigateRegister, enabled = !authState.isLoading) {
+            Text("Chưa có tài khoản? Đăng ký", color = Color(0xFF4B9BFF), fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         // Điều khoản
         val annotated = buildAnnotatedString {
