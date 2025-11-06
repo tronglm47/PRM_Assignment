@@ -7,10 +7,9 @@ import retrofit2.http.Header;
 import retrofit2.http.Path;
 
 public interface CustomerApi {
-    // Gọi /api/customer/user/{userId}
     @GET("customers/user/{userId}")
     Call<CustomerResponse> getCustomerByUserId(
-            @Header("Authorization") String token,
+            @Header("Authorization") String authHeader,
             @Path("userId") String userId
     );
 }

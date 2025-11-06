@@ -30,18 +30,21 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Appointments List -->
+    <!-- Appointments List - Using ScrollView with proper configuration -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/headerSection"
-        android:fillViewport="true">
+        android:fillViewport="false"
+        android:scrollbars="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:paddingBottom="100dp"
+            android:clipToPadding="false">
 
             <!-- Appointments Container -->
             <LinearLayout
@@ -99,6 +102,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:indeterminateTint="#FFFFFF" />
-    </FrameLayout>
-</RelativeLayout>
 
+    </FrameLayout>
+
+</RelativeLayout>

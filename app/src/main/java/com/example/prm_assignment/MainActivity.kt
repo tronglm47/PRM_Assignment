@@ -11,9 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.example.prm_assignment.HomeActivity
 import com.example.prm_assignment.ui.AuthViewModel
 import com.example.prm_assignment.ui.LoginScreen
+import com.example.prm_assignment.ui.RegisterScreen
+import com.example.prm_assignment.ui.VerifyOtpScreen
 import com.example.prm_assignment.ui.theme.PRM_AssignmentTheme
 
 class MainActivity : ComponentActivity() {
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PRM_AssignmentTheme {
                 val authState by authViewModel.authState.collectAsState()
+                var screen by remember { mutableStateOf("login") } // login | register | verify
 
                 // Auto-navigate to HomeActivity when login is successful
                 LaunchedEffect(authState.isLoggedIn) {
@@ -35,15 +37,31 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // If have pending email -> go to verify
+                LaunchedEffect(authState.pendingVerifyEmail) {
+                    if (!authState.pendingVerifyEmail.isNullOrEmpty()) screen = "verify"
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        viewModel = authViewModel,
-                        onLoginSuccess = {
-                            // Tự động chuyển sang HomeActivity khi login thành công
-                            authViewModel.loadUserProfile()
-                        }
-                    )
+                    when (screen) {
+                        "register" -> RegisterScreen(
+                            modifier = Modifier.padding(innerPadding),
+                            viewModel = authViewModel,
+                            onNavigateLogin = { screen = "login" },
+                            onNavigateVerify = { screen = "verify" }
+                        )
+                        "verify" -> VerifyOtpScreen(
+                            modifier = Modifier.padding(innerPadding),
+                            viewModel = authViewModel,
+                            onBackToLogin = { screen = "login" }
+                        )
+                        else -> LoginScreen(
+                            modifier = Modifier.padding(innerPadding),
+                            viewModel = authViewModel,
+                            onLoginSuccess = { authViewModel.loadUserProfile() },
+                            onNavigateRegister = { screen = "register" }
+                        )
+                    }
                 }
             }
         }
