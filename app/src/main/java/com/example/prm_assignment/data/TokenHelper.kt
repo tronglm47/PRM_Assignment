@@ -3,6 +3,7 @@ package com.example.prm_assignment.data
 import android.content.Context
 import com.example.prm_assignment.data.model.ProfileResponse
 import com.example.prm_assignment.data.remote.ProfileRetrofitClient
+import com.example.prm_assignment.data.remote.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,6 +23,20 @@ class TokenHelper(private val context: Context) {
 
     interface TokenCallback {
         fun onTokenRetrieved(token: String?)
+    }
+
+    // Callback for async operations
+    interface TokenAsyncCallback {
+        fun onResult(token: String?)
+    }
+
+    interface ClearTokensCallback {
+        fun onComplete()
+    }
+
+    interface ProfileCallback {
+        fun onSuccess(profile: ProfileResponse)
+        fun onError(message: String)
     }
 
     // 🆕 Lấy userId (trong data.userId.id) từ API /auth/profile
@@ -54,5 +69,52 @@ class TokenHelper(private val context: Context) {
                 })
             }
         })
+    }
+
+    companion object {
+        @JvmStatic
+        suspend fun getAccessToken(context: Context): String? {
+            return TokenManager(context).getAccessToken()
+        }
+
+        @JvmStatic
+        suspend fun clearTokens(context: Context) {
+            TokenManager(context).clearTokens()
+        }
+
+        // Java-friendly methods that handle coroutines internally
+        @JvmStatic
+        fun getAccessTokenAsync(context: Context, callback: TokenAsyncCallback) {
+            CoroutineScope(Dispatchers.Main).launch {
+                val token = TokenManager(context).getAccessToken()
+                callback.onResult(token)
+            }
+        }
+
+        @JvmStatic
+        fun clearTokensAsync(context: Context, callback: ClearTokensCallback) {
+            CoroutineScope(Dispatchers.Main).launch {
+                TokenManager(context).clearTokens()
+                callback.onComplete()
+            }
+        }
+
+        @JvmStatic
+        fun loadProfileAsync(context: Context, callback: ProfileCallback) {
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val token = TokenManager(context).getAccessToken()
+                    if (token.isNullOrEmpty()) {
+                        callback.onError("Token not found")
+                        return@launch
+                    }
+
+                    val response = RetrofitClient.getAuthApi().getProfile("Bearer $token")
+                    callback.onSuccess(response)
+                } catch (e: Exception) {
+                    callback.onError(e.message ?: "Unknown error")
+                }
+            }
+        }
     }
 }
