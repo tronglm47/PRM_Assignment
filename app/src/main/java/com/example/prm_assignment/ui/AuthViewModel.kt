@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prm_assignment.data.TokenManager
 import com.example.prm_assignment.data.model.LoginRequest
-import com.example.prm_assignment.data.model.UserProfile
+import com.example.prm_assignment.data.model.ProfileData
 import com.example.prm_assignment.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 data class AuthState(
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
-    val userProfile: UserProfile? = null,
+    val userProfile: ProfileData? = null,
     val errorMessage: String? = null,
     val successMessage: String? = null
 )
