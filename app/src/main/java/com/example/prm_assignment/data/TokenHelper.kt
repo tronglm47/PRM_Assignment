@@ -38,6 +38,13 @@ class TokenHelper(private val context: Context) {
         fun onSuccess(profile: ProfileResponse)
         fun onError(message: String)
     }
+    interface UserIdCallback {
+        fun onUserIdRetrieved(userId: String?)
+    }
+
+    interface CustomerIdCallback {
+        fun onCustomerIdRetrieved(customerId: String?)
+    }
 
     // 🆕 Lấy userId (trong data.userId.id) từ API /auth/profile
     fun getUserIdFromProfile(callback: (String?) -> Unit) {
@@ -65,6 +72,68 @@ class TokenHelper(private val context: Context) {
 
                     override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
                         callback(null)
+                    }
+                })
+            }
+        })
+    }
+
+    // Java-friendly version
+    fun getUserIdFromProfile(callback: UserIdCallback) {
+        getUserIdFromProfile { userId ->
+            callback.onUserIdRetrieved(userId)
+        }
+    }
+
+    // 🆕 Lấy customerId từ userId thông qua API /customers/user/{userId}
+    fun getCustomerIdFromProfile(callback: CustomerIdCallback) {
+        getTokenAndExecute(object : TokenCallback {
+            override fun onTokenRetrieved(token: String?) {
+                if (token.isNullOrEmpty()) {
+                    callback.onCustomerIdRetrieved(null)
+                    return
+                }
+
+                // First get userId from profile
+                val authApi = ProfileRetrofitClient.getInstance().getProfileApi()
+                authApi.getProfile("Bearer $token").enqueue(object : Callback<ProfileResponse> {
+                    override fun onResponse(
+                        call: Call<ProfileResponse>,
+                        response: Response<ProfileResponse>
+                    ) {
+                        if (response.isSuccessful && response.body()?.isSuccess == true) {
+                            val userId = response.body()?.data?.userId?.id
+                            if (userId.isNullOrEmpty()) {
+                                callback.onCustomerIdRetrieved(null)
+                                return
+                            }
+
+                            // Then get customerId from userId
+                            val customerApi = com.example.prm_assignment.data.remote.CustomerRetrofitClient.getInstance().getCustomerApi()
+                            customerApi.getCustomerByUserId(userId, "Bearer $token").enqueue(object : Callback<com.example.prm_assignment.data.model.CustomerResponse> {
+                                override fun onResponse(
+                                    call: Call<com.example.prm_assignment.data.model.CustomerResponse>,
+                                    response: Response<com.example.prm_assignment.data.model.CustomerResponse>
+                                ) {
+                                    if (response.isSuccessful && response.body()?.isSuccess == true) {
+                                        val customerId = response.body()?.data?.id
+                                        callback.onCustomerIdRetrieved(customerId)
+                                    } else {
+                                        callback.onCustomerIdRetrieved(null)
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<com.example.prm_assignment.data.model.CustomerResponse>, t: Throwable) {
+                                    callback.onCustomerIdRetrieved(null)
+                                }
+                            })
+                        } else {
+                            callback.onCustomerIdRetrieved(null)
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ProfileResponse>, t: Throwable) {
+                        callback.onCustomerIdRetrieved(null)
                     }
                 })
             }

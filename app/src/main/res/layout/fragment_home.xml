@@ -304,7 +304,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Xe của bạn"
+            android:text="Các gói xe của tôi"
             android:textSize="22sp"
             android:textColor="#2C5F2D"
             android:textStyle="bold"
@@ -317,321 +317,13 @@
             android:scrollbars="none"
             android:layout_marginBottom="20dp">
 
-
             <LinearLayout
+                android:id="@+id/llVehicleSubscriptionsContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-
-                <!-- Vehicle Card 1 -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="320dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp"
-                    app:cardBackgroundColor="#FFFFFF">
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-
-                        <!-- Vehicle Image Placeholder -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
-                            android:layout_height="140dp"
-                            android:layout_marginBottom="12dp"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#E8F5E8">
-
-
-                            <ImageView
-                                android:layout_width="80dp"
-                                android:layout_height="80dp"
-                                android:layout_gravity="center"
-                                android:src="@android:drawable/ic_menu_directions"
-                                android:contentDescription="Vehicle image"
-                                app:tint="#4A7C59"
-                                tools:ignore="HardcodedText" />
-                        </androidx.cardview.widget.CardView>
-
-
-                        <!-- Vehicle Info -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Honda City 2022"
-                            android:textSize="18sp"
-                            android:textColor="#2C5F2D"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="4dp"
-                            tools:ignore="HardcodedText" />
-
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Biển số: 30A-12345"
-                            android:textSize="14sp"
-                            android:textColor="#6B8E6B"
-                            android:layout_marginBottom="12dp"
-                            tools:ignore="HardcodedText" />
-
-
-                        <!-- Maintenance Status -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginBottom="8dp">
-
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Còn 15 ngày"
-                                android:textSize="13sp"
-                                android:textColor="#FF6B35"
-                                android:textStyle="bold"
-                                tools:ignore="HardcodedText" />
-
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="2.500 km còn lại"
-                                android:textSize="12sp"
-                                android:textColor="#6B8E6B"
-                                tools:ignore="HardcodedText" />
-                        </LinearLayout>
-
-
-                        <!-- Progress Bar -->
-                        <ProgressBar
-                            android:layout_width="match_parent"
-                            android:layout_height="8dp"
-                            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                            android:progress="65"
-                            android:progressTint="#4A7C59"
-                            android:progressBackgroundTint="#E8F5E8" />
-
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-
-                <!-- Vehicle Card 2 -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="320dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp"
-                    app:cardBackgroundColor="#FFFFFF">
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-
-                        <!-- Vehicle Image Placeholder -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
-                            android:layout_height="140dp"
-                            android:layout_marginBottom="12dp"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#E8F5E8">
-
-
-                            <ImageView
-                                android:layout_width="80dp"
-                                android:layout_height="80dp"
-                                android:layout_gravity="center"
-                                android:src="@android:drawable/ic_menu_directions"
-                                android:contentDescription="Vehicle image"
-                                app:tint="#4A7C59"
-                                tools:ignore="HardcodedText" />
-                        </androidx.cardview.widget.CardView>
-
-
-                        <!-- Vehicle Info -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Toyota Vios 2021"
-                            android:textSize="18sp"
-                            android:textColor="#2C5F2D"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="4dp"
-                            tools:ignore="HardcodedText" />
-
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Biển số: 29B-67890"
-                            android:textSize="14sp"
-                            android:textColor="#6B8E6B"
-                            android:layout_marginBottom="12dp"
-                            tools:ignore="HardcodedText" />
-
-
-                        <!-- Maintenance Status -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginBottom="8dp">
-
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Còn 7 ngày"
-                                android:textSize="13sp"
-                                android:textColor="#FF6B35"
-                                android:textStyle="bold"
-                                tools:ignore="HardcodedText" />
-
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="800 km còn lại"
-                                android:textSize="12sp"
-                                android:textColor="#6B8E6B"
-                                tools:ignore="HardcodedText" />
-                        </LinearLayout>
-
-
-                        <!-- Progress Bar -->
-                        <ProgressBar
-                            android:layout_width="match_parent"
-                            android:layout_height="8dp"
-                            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                            android:progress="85"
-                            android:progressTint="#FF6B35"
-                            android:progressBackgroundTint="#E8F5E8" />
-
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-
-                <!-- Vehicle Card 3 -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="320dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp"
-                    app:cardBackgroundColor="#FFFFFF">
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-
-                        <!-- Vehicle Image Placeholder -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
-                            android:layout_height="140dp"
-                            android:layout_marginBottom="12dp"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#E8F5E8">
-
-
-                            <ImageView
-                                android:layout_width="80dp"
-                                android:layout_height="80dp"
-                                android:layout_gravity="center"
-                                android:src="@android:drawable/ic_menu_directions"
-                                android:contentDescription="Vehicle image"
-                                app:tint="#4A7C59"
-                                tools:ignore="HardcodedText" />
-                        </androidx.cardview.widget.CardView>
-
-
-                        <!-- Vehicle Info -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Mazda 3 2023"
-                            android:textSize="18sp"
-                            android:textColor="#2C5F2D"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="4dp"
-                            tools:ignore="HardcodedText" />
-
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Biển số: 51F-11111"
-                            android:textSize="14sp"
-                            android:textColor="#6B8E6B"
-                            android:layout_marginBottom="12dp"
-                            tools:ignore="HardcodedText" />
-
-
-                        <!-- Maintenance Status -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginBottom="8dp">
-
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Còn 30 ngày"
-                                android:textSize="13sp"
-                                android:textColor="#4A7C59"
-                                android:textStyle="bold"
-                                tools:ignore="HardcodedText" />
-
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="4.200 km còn lại"
-                                android:textSize="12sp"
-                                android:textColor="#6B8E6B"
-                                tools:ignore="HardcodedText" />
-                        </LinearLayout>
-
-
-                        <!-- Progress Bar -->
-                        <ProgressBar
-                            android:layout_width="match_parent"
-                            android:layout_height="8dp"
-                            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                            android:progress="40"
-                            android:progressTint="#4A7C59"
-                            android:progressBackgroundTint="#E8F5E8" />
-
-
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
+                <!-- Vehicle subscription cards will be added dynamically here -->
 
             </LinearLayout>
         </HorizontalScrollView>
@@ -661,14 +353,14 @@
             <ProgressBar
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:indeterminateTint="#4A7C59" />
+                android:indeterminateTint="#203A9A" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Đang tải dữ liệu..."
                 android:textSize="16sp"
-                android:textColor="#4A7C59"
+                android:textColor="#203A9A"
                 android:textStyle="bold"
                 android:layout_marginTop="16dp"
                 tools:ignore="HardcodedText" />
@@ -685,7 +377,7 @@
         android:layout_marginBottom="80dp"
         app:cardCornerRadius="28dp"
         app:cardElevation="12dp"
-        app:cardBackgroundColor="#4A7C59">
+        app:cardBackgroundColor="#203A9A">
 
         <LinearLayout
             android:layout_width="wrap_content"
