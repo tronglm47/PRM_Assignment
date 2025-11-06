@@ -210,8 +210,7 @@ public class BookingFragment extends Fragment {
 
         progressBar.setVisibility(View.VISIBLE);
 
-        // giả lập ID tạm
-        String staffId = "68fefc0501db5c1af95b502a";
+
         String customerId = "690796b3a7b4303a78b7159c";
 
         // Tạo thời gian ISO
@@ -224,7 +223,7 @@ public class BookingFragment extends Fragment {
         String endTime = String.format(Locale.getDefault(), "%sT%02d:%02d:00.000Z", selectedDate, endHour, minute);
 
         AppointmentRequest request = new AppointmentRequest(
-                staffId,
+                null,
                 customerId,
                 vehicleId,
                 selectedCenterId,
