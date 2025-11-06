@@ -177,16 +177,32 @@ public class BookingFragment extends Fragment {
     // ================== Date picker ==================
     private void showDatePicker() {
         Calendar calendar = Calendar.getInstance();
+
+        // Giới hạn ngày
+        long today = calendar.getTimeInMillis();
+
+        // Cho phép chọn tối đa 7 ngày tiếp theo
+        calendar.add(Calendar.DAY_OF_MONTH, 7);
+        long maxDate = calendar.getTimeInMillis();
+
+        // Tạo DatePickerDialog
         DatePickerDialog dialog = new DatePickerDialog(requireContext(),
                 (view, year, month, day) -> {
                     selectedDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, day);
                     tvDate.setText(selectedDate);
                 },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH));
+                Calendar.getInstance().get(Calendar.YEAR),
+                Calendar.getInstance().get(Calendar.MONTH),
+                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+        );
+
+        // Áp dụng giới hạn ngày
+        dialog.getDatePicker().setMinDate(today);
+        dialog.getDatePicker().setMaxDate(maxDate);
+
         dialog.show();
     }
+
 
     // ================== Time picker ==================
     private void showTimePicker() {
