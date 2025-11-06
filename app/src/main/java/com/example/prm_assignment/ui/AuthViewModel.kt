@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.prm_assignment.data.TokenManager
 import com.example.prm_assignment.data.model.LoginRequest
-import com.example.prm_assignment.data.model.ProfileData
+import com.example.prm_assignment.data.model.ProfileResponse
 import com.example.prm_assignment.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 data class AuthState(
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
-    val userProfile: ProfileData? = null,
+    val userProfile: ProfileResponse.ProfileData? = null,
     val errorMessage: String? = null,
     val successMessage: String? = null
 )
@@ -38,16 +38,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d(TAG, "Starting login for email: $email")
                 _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
 
-                val request = LoginRequest(
-                    identifier = email,
-                    password = password
-                )
+                val request = LoginRequest(email, password)
 
                 Log.d(TAG, "Calling login API...")
                 val response = authApi.login(request)
-                Log.d(TAG, "Login API response: success=${response.success}, message=${response.message}")
+                Log.d(TAG, "Login API response: success=${response.isSuccess}, message=${response.message}")
 
-                if (response.success && response.data != null) {
+                if (response.isSuccess && response.data != null) {
                     // Lưu token
                     Log.d(TAG, "Saving tokens...")
                     tokenManager.saveTokens(response.data.accessToken, response.data.refreshToken)
@@ -57,9 +54,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     try {
                         Log.d(TAG, "Fetching user profile...")
                         val profileResponse = authApi.getProfile("Bearer ${response.data.accessToken}")
-                        Log.d(TAG, "Profile API response: success=${profileResponse.success}")
+                        Log.d(TAG, "Profile API response: success=${profileResponse.isSuccess}")
 
-                        val userProfile = if (profileResponse.success && profileResponse.data != null) {
+                        val userProfile = if (profileResponse.isSuccess && profileResponse.data != null) {
                             Log.d(TAG, "User profile: ${profileResponse.data}")
                             profileResponse.data
                         } else {
@@ -118,7 +115,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun fetchUserProfile(token: String) {
         try {
             val response = authApi.getProfile(token)
-            if (response.success && response.data != null) {
+            if (response.isSuccess && response.data != null) {
                 _authState.value = _authState.value.copy(
                     userProfile = response.data
                 )

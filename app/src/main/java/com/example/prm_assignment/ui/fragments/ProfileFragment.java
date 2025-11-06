@@ -171,7 +171,7 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private void updateProfileUI(com.example.prm_assignment.data.model.ProfileData profile) {
+    private void updateProfileUI(com.example.prm_assignment.data.model.ProfileResponse.ProfileData profile) {
         if (profile == null) return;
 
         tvCustomerName.setText(profile.getCustomerName() != null ? profile.getCustomerName() : "N/A");
@@ -302,4 +302,3 @@ public class ProfileFragment extends Fragment {
         handler.removeCallbacksAndMessages(null);
     }
 }
-
