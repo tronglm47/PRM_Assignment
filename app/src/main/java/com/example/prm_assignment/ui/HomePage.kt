@@ -17,12 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.prm_assignment.data.model.ProfileData
+import com.example.prm_assignment.data.model.ProfileResponse
 
 @Composable
 fun HomePage(
     modifier: Modifier = Modifier,
-    userProfile: ProfileData?,
+    userProfile: ProfileResponse.ProfileData?,
     onLogout: () -> Unit = {}
 ) {
     Column(
