@@ -5,107 +5,89 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
+    app:cardElevation="2dp"
     app:cardBackgroundColor="#FFFFFF">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <!-- Car Image -->
-        <ImageView
-            android:id="@+id/ivCarImage"
-            android:layout_width="120dp"
-            android:layout_height="100dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_menu_gallery"
-            android:contentDescription="Car image" />
+        <!-- Top Section: Car Info and Image -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <!-- Car Info -->
-        <LinearLayout
-            android:id="@+id/llCarInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/ivCarImage"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="16dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvCarModel"
+            <!-- Left Side - Car Info -->
+            <LinearLayout
+                android:id="@+id/llCarInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Model 3"
-                android:textSize="24sp"
-                android:textColor="#1A1A1A"
-                android:textStyle="bold" />
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tvCarYear"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="2021"
-                android:textSize="18sp"
-                android:textColor="#6C757D"
-                android:layout_marginTop="4dp" />
-        </LinearLayout>
-
-        <!-- Right Side Container -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:orientation="vertical"
-            android:gravity="end">
-
-            <!-- Next Service Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Next Service"
-                android:textSize="14sp"
-                android:textColor="#6C757D"
-                android:layout_marginBottom="4dp" />
-
-            <!-- Service Indicator -->
-            <TextView
-                android:id="@+id/tvServiceIndicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textSize="20sp"
-                android:textColor="#FF6B6B"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
-
-            <!-- Book Service Button -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/btnBookService"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#4A90E2">
-
+                <!-- Car Model/Name -->
                 <TextView
+                    android:id="@+id/tvCarModel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Book Service"
-                    android:textSize="14sp"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp" />
-            </androidx.cardview.widget.CardView>
-        </LinearLayout>
+                    android:text="@string/porsche_placeholder"
+                    android:textSize="20sp"
+                    android:textColor="#000000"
+                    android:textStyle="bold" />
 
-    </RelativeLayout>
+                <!-- Registration ID -->
+                <TextView
+                    android:id="@+id/tvCarYear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/reg_id_placeholder"
+                    android:textSize="14sp"
+                    android:textColor="#808080"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <!-- Right Side - Car Image -->
+            <ImageView
+                android:id="@+id/ivCarImage"
+                android:layout_width="180dp"
+                android:layout_height="120dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_gallery"
+                android:contentDescription="@string/car_image" />
+
+        </RelativeLayout>
+
+        <!-- Bottom Section: Book Service Button -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/btnBookService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#7B4EC8">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/book_service"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
 
 </androidx.cardview.widget.CardView>
 
