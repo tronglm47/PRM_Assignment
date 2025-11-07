@@ -30,28 +30,28 @@
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
-    <!-- Appointments List - Using ScrollView with proper configuration -->
-    <ScrollView
+    <!-- Appointments List - Using NestedScrollView for better scrolling -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/headerSection"
-        android:fillViewport="false"
+        android:fillViewport="true"
         android:scrollbars="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:paddingBottom="100dp"
-            android:clipToPadding="false">
+            android:orientation="vertical">
 
             <!-- Appointments Container -->
             <LinearLayout
                 android:id="@+id/llAppointmentsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:paddingBottom="80dp"
+                android:clipToPadding="false" />
 
             <!-- Empty State -->
             <LinearLayout
@@ -86,7 +86,7 @@
                     android:layout_marginTop="8dp" />
             </LinearLayout>
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <!-- Loading Overlay -->
     <FrameLayout

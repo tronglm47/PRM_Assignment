@@ -175,32 +175,46 @@ public class RecordsFragment extends Fragment {
 
     private void fetchAppointments(String authHeader, String customerId) {
         Log.d(TAG, "Fetching appointments for customer: " + customerId);
+        Log.d(TAG, "Auth header: " + authHeader);
         appointmentApi.getAppointments(authHeader, customerId).enqueue(new Callback<AppointmentsResponse>() {
             @Override
             public void onResponse(@NonNull Call<AppointmentsResponse> call, @NonNull Response<AppointmentsResponse> response) {
                 hideLoading();
                 Log.d(TAG, "Appointments response code: " + response.code());
+                Log.d(TAG, "Request URL: " + call.request().url());
 
                 if (response.isSuccessful() && response.body() != null) {
                     AppointmentsResponse appointmentsResponse = response.body();
+                    Log.d(TAG, "Response success: " + appointmentsResponse.isSuccess());
+                    Log.d(TAG, "Response data: " + (appointmentsResponse.getData() != null ? "not null" : "null"));
+
                     if (appointmentsResponse.isSuccess() && appointmentsResponse.getData() != null) {
                         // Get appointments from nested data.appointments
                         List<AppointmentModel> appointments = appointmentsResponse.getData().getAppointments();
+                        Log.d(TAG, "Appointments list: " + (appointments != null ? "not null" : "null"));
 
                         if (appointments != null && !appointments.isEmpty()) {
                             Log.d(TAG, "Loaded " + appointments.size() + " appointments");
                             hideEmptyState();
                             displayAppointments(appointments);
                         } else {
-                            Log.w(TAG, "No appointments found");
+                            Log.w(TAG, "No appointments found or list is empty");
                             showEmptyState();
                         }
                     } else {
                         Log.w(TAG, "Appointments response unsuccessful or data is null");
+                        Log.w(TAG, "Message: " + appointmentsResponse.getMessage());
                         showEmptyState();
                     }
                 } else {
                     Log.e(TAG, "Appointments fetch failed: " + response.code());
+                    try {
+                        if (response.errorBody() != null) {
+                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error body", e);
+                    }
                     showEmptyState();
                     Toast.makeText(getContext(), "Không thể tải lịch hẹn: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
@@ -249,9 +263,9 @@ public class RecordsFragment extends Fragment {
         // Set vehicle info - updated to use new field names
         if (appointment.getVehicleId() != null) {
             String vehicleInfo = (appointment.getVehicleId().getVehicleName() != null ?
-                                 appointment.getVehicleId().getVehicleName() :
-                                 appointment.getVehicleId().getModel()) + " - " +
-                                 appointment.getVehicleId().getPlateNumber();
+                    appointment.getVehicleId().getVehicleName() :
+                    appointment.getVehicleId().getModel()) + " - " +
+                    appointment.getVehicleId().getPlateNumber();
             tvVehicleInfo.setText(vehicleInfo);
         } else {
             tvVehicleInfo.setText("N/A");
@@ -268,10 +282,10 @@ public class RecordsFragment extends Fragment {
         String timeInfo = formatTime(appointment.getStartTime()) + " - " + formatTime(appointment.getEndTime());
         tvTimeInfo.setText(timeInfo);
 
-        // Set staff info if available
-        if (appointment.getStaffId() != null && appointment.getStaffId().getStaffName() != null) {
+        // Set staff info if available - staffId is now a String, not an object
+        if (appointment.getStaffId() != null && !appointment.getStaffId().isEmpty()) {
             llStaffInfo.setVisibility(View.VISIBLE);
-            tvStaffInfo.setText(appointment.getStaffId().getStaffName());
+            tvStaffInfo.setText("Staff ID: " + appointment.getStaffId());
         } else {
             llStaffInfo.setVisibility(View.GONE);
         }

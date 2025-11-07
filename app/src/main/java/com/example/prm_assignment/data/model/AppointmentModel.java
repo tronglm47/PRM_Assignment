@@ -16,7 +16,7 @@ public class AppointmentModel {
     private CenterInfo centerId;
 
     @SerializedName("staffId")
-    private StaffInfo staffId;
+    private String staffId;  // Changed from StaffInfo to String because API returns null or string ID
 
     private String startTime;
     private String endTime;
@@ -59,11 +59,11 @@ public class AppointmentModel {
         this.centerId = centerId;
     }
 
-    public StaffInfo getStaffId() {
+    public String getStaffId() {
         return staffId;
     }
 
-    public void setStaffId(StaffInfo staffId) {
+    public void setStaffId(String staffId) {
         this.staffId = staffId;
     }
 
@@ -181,20 +181,6 @@ public class AppointmentModel {
 
         public String getPhone() {
             return phone;
-        }
-    }
-
-    public static class StaffInfo {
-        @SerializedName("_id")
-        private String id;
-        private String staffName;
-
-        public String getId() {
-            return id;
-        }
-
-        public String getStaffName() {
-            return staffName;
         }
     }
 }
