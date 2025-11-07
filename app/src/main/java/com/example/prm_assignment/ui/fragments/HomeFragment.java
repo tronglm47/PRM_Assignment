@@ -10,7 +10,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -489,8 +488,7 @@ public class HomeFragment extends Fragment {
         // Inflate the vehicle subscription card layout
         View cardView = LayoutInflater.from(getContext()).inflate(R.layout.item_vehicle_subscription, llVehicleSubscriptionsContainer, false);
 
-        // Find views in the card
-        ImageView ivVehicleImage = cardView.findViewById(R.id.ivVehicleImage);
+        // Find views in the card (removed ivVehicleImage)
         TextView tvVehicleName = cardView.findViewById(R.id.tvVehicleName);
         TextView tvVehicleModel = cardView.findViewById(R.id.tvVehicleModel);
         TextView tvPackageName = cardView.findViewById(R.id.tvPackageName);
@@ -501,23 +499,6 @@ public class HomeFragment extends Fragment {
 
         // Set vehicle data
         if (subscription.getVehicleInfo() != null) {
-            // Load vehicle image using Glide
-            if (subscription.getVehicleInfo().getImageUrl() != null && !subscription.getVehicleInfo().getImageUrl().isEmpty()) {
-                com.bumptech.glide.Glide.with(this)
-                        .load(subscription.getVehicleInfo().getImageUrl())
-                        .placeholder(android.R.drawable.ic_menu_directions)
-                        .error(android.R.drawable.ic_menu_directions)
-                        .centerCrop()
-                        .into(ivVehicleImage);
-                // Remove tint when showing real image
-                ivVehicleImage.setImageTintList(null);
-            } else {
-                // Use default icon with tint
-                ivVehicleImage.setImageResource(android.R.drawable.ic_menu_directions);
-                ivVehicleImage.setImageTintList(android.content.res.ColorStateList.valueOf(
-                        getResources().getColor(android.R.color.holo_green_dark, null)));
-            }
-
             tvVehicleName.setText(subscription.getVehicleInfo().getVehicleName() != null
                     ? subscription.getVehicleInfo().getVehicleName() : "N/A");
             tvVehicleModel.setText("Model: " + (subscription.getVehicleInfo().getModel() != null
