@@ -31,6 +31,13 @@
             android:exported="true"
             android:theme="@style/Theme.PRM_Assignment" />
 
+        <!-- AppointmentDetailActivity for viewing appointment details with service records -->
+        <activity
+            android:name=".ui.activities.AppointmentDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PRM_Assignment"
+            android:parentActivityName=".HomeActivity" />
+
     </application>
 
 </manifest>

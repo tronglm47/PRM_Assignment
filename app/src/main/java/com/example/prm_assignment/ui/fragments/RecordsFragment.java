@@ -261,21 +261,24 @@ public class RecordsFragment extends Fragment {
         tvStatus.setBackgroundColor(getStatusColor(status));
 
         // Set vehicle info - updated to use new field names
+        String vehicleInfo = "N/A";
         if (appointment.getVehicleId() != null) {
-            String vehicleInfo = (appointment.getVehicleId().getVehicleName() != null ?
+            vehicleInfo = (appointment.getVehicleId().getVehicleName() != null ?
                     appointment.getVehicleId().getVehicleName() :
                     appointment.getVehicleId().getModel()) + " - " +
                     appointment.getVehicleId().getPlateNumber();
             tvVehicleInfo.setText(vehicleInfo);
         } else {
-            tvVehicleInfo.setText("N/A");
+            tvVehicleInfo.setText(vehicleInfo);
         }
 
         // Set center info - updated to use 'name' instead of 'centerName'
+        String centerInfo = "N/A";
         if (appointment.getCenterId() != null) {
-            tvCenterInfo.setText(appointment.getCenterId().getName());
+            centerInfo = appointment.getCenterId().getName();
+            tvCenterInfo.setText(centerInfo);
         } else {
-            tvCenterInfo.setText("N/A");
+            tvCenterInfo.setText(centerInfo);
         }
 
         // Set time info
@@ -289,6 +292,21 @@ public class RecordsFragment extends Fragment {
         } else {
             llStaffInfo.setVisibility(View.GONE);
         }
+
+        // Add click listener to open detail activity
+        final String finalVehicleInfo = vehicleInfo;
+        final String finalCenterInfo = centerInfo;
+        cardView.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(getContext(),
+                    com.example.prm_assignment.ui.activities.AppointmentDetailActivity.class);
+            intent.putExtra("appointment_id", appointment.getId());
+            intent.putExtra("date", formattedDate);
+            intent.putExtra("time", timeInfo);
+            intent.putExtra("vehicle", finalVehicleInfo);
+            intent.putExtra("center", finalCenterInfo);
+            intent.putExtra("status", status);
+            startActivity(intent);
+        });
 
         llAppointmentsContainer.addView(cardView);
     }
