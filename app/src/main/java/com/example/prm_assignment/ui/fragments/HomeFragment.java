@@ -421,6 +421,7 @@ public class HomeFragment extends Fragment {
                     public void onResponse(@NonNull Call<com.example.prm_assignment.data.model.VehicleSubscriptionResponse> call,
                                            @NonNull Response<com.example.prm_assignment.data.model.VehicleSubscriptionResponse> response) {
                         Log.d(TAG, "Vehicle subscriptions API response received: " + response.code());
+                        Log.d(TAG, "Request URL: " + call.request().url());
 
                         if (response.isSuccessful() && response.body() != null) {
                             com.example.prm_assignment.data.model.VehicleSubscriptionResponse subscriptionResponse = response.body();
@@ -441,6 +442,14 @@ public class HomeFragment extends Fragment {
                             }
                         } else {
                             Log.e(TAG, "Vehicle subscriptions fetch failed: " + response.code());
+                            try {
+                                if (response.errorBody() != null) {
+                                    String errorBody = response.errorBody().string();
+                                    Log.e(TAG, "Error body: " + errorBody);
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error reading error body", e);
+                            }
                         }
 
                         vehicleSubscriptionsLoaded = true;
@@ -451,8 +460,22 @@ public class HomeFragment extends Fragment {
                     public void onFailure(@NonNull Call<com.example.prm_assignment.data.model.VehicleSubscriptionResponse> call,
                                           @NonNull Throwable t) {
                         Log.e(TAG, "Vehicle subscriptions fetch error: " + t.getMessage(), t);
+                        Log.e(TAG, "Error type: " + t.getClass().getName());
+                        if (t.getCause() != null) {
+                            Log.e(TAG, "Cause: " + t.getCause().getMessage());
+                        }
+
                         vehicleSubscriptionsLoaded = true;
                         checkAndHideLoading();
+
+                        // Show user-friendly error message
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() ->
+                                Toast.makeText(getContext(),
+                                    "Không thể tải thông tin gói xe. Vui lòng thử lại sau.",
+                                    Toast.LENGTH_SHORT).show()
+                            );
+                        }
                     }
                 });
     }
