@@ -18,6 +18,10 @@ public class CreateSubscriptionRequest {
     @SerializedName("status")
     private String status; // "ACTIVE", "PENDING", "EXPIRED"
 
+    public CreateSubscriptionRequest() {
+        // No-arg constructor
+    }
+
     public CreateSubscriptionRequest(String vehicleId, String packageId, String startDate, String endDate, String status) {
         this.vehicleId = vehicleId;
         this.packageId = packageId;

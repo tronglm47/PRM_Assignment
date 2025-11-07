@@ -1,6 +1,7 @@
 package com.example.prm_assignment.ui.fragments;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,10 +10,14 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,15 +28,28 @@ import androidx.fragment.app.Fragment;
 
 import com.example.prm_assignment.R;
 import com.example.prm_assignment.data.TokenHelper;
+import com.example.prm_assignment.data.model.CreateSubscriptionRequest;
 import com.example.prm_assignment.data.model.PackageModel;
 import com.example.prm_assignment.data.model.PackagesResponse;
 import com.example.prm_assignment.data.model.ProfileResponse;
+import com.example.prm_assignment.data.model.SingleSubscriptionResponse;
+import com.example.prm_assignment.data.model.VehicleModel;
+import com.example.prm_assignment.data.model.VehicleResponse;
 import com.example.prm_assignment.data.remote.PackagesApi;
 import com.example.prm_assignment.data.remote.PackagesRetrofitClient;
 import com.example.prm_assignment.data.remote.ProfileApi;
 import com.example.prm_assignment.data.remote.ProfileRetrofitClient;
+import com.example.prm_assignment.data.remote.VehiclesApi;
+import com.example.prm_assignment.data.remote.VehiclesRetrofitClient;
+import com.example.prm_assignment.data.remote.VehicleSubscriptionApi;
+import com.example.prm_assignment.data.remote.VehicleSubscriptionRetrofitClient;
 
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -51,6 +69,9 @@ public class HomeFragment extends Fragment {
     private TokenHelper tokenHelper;
     private PackagesApi packagesApi;
     private ProfileApi profileApi;
+    private VehiclesApi vehiclesApi;
+    private VehicleSubscriptionApi vehicleSubscriptionApi;
+    private List<VehicleModel> vehiclesList = new ArrayList<>();
 
     // Track loading states
     private boolean profileLoaded = false;
@@ -67,6 +88,8 @@ public class HomeFragment extends Fragment {
         tokenHelper = new TokenHelper(requireContext());
         packagesApi = PackagesRetrofitClient.getInstance().getPackagesApi();
         profileApi = ProfileRetrofitClient.getInstance().getProfileApi();
+        vehiclesApi = VehiclesRetrofitClient.getInstance().getVehiclesApi();
+        vehicleSubscriptionApi = VehicleSubscriptionRetrofitClient.getInstance().getVehicleSubscriptionApi();
 
         // Initialize views
         tvGreeting = view.findViewById(R.id.tvGreeting);
@@ -205,7 +228,7 @@ public class HomeFragment extends Fragment {
 
         // Set click listener
         btnBookNow.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Đặt gói: " + packageModel.getName(), Toast.LENGTH_SHORT).show();
+            showPaymentDialog(packageModel);
         });
 
         cardView.setOnClickListener(v -> {
@@ -415,7 +438,7 @@ public class HomeFragment extends Fragment {
         com.example.prm_assignment.data.remote.VehicleSubscriptionRetrofitClient
                 .getInstance()
                 .getVehicleSubscriptionApi()
-                .getCustomerSubscriptions(customerId, authHeader)
+                .getCustomerSubscriptions(authHeader, customerId)
                 .enqueue(new Callback<com.example.prm_assignment.data.model.VehicleSubscriptionResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<com.example.prm_assignment.data.model.VehicleSubscriptionResponse> call,
@@ -605,6 +628,212 @@ public class HomeFragment extends Fragment {
 
         // Add card to container
         llVehicleSubscriptionsContainer.addView(cardView);
+    }
+
+    private void showPaymentDialog(PackageModel packageModel) {
+        // Inflate dialog layout
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_payment_package, null);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+        // Initialize dialog views
+        TextView tvPackageNameDialog = dialogView.findViewById(R.id.tvPackageNameDialog);
+        TextView tvPackageDescription = dialogView.findViewById(R.id.tvPackageDescription);
+        TextView tvPackageDuration = dialogView.findViewById(R.id.tvPackageDuration);
+        TextView tvPackageKmInterval = dialogView.findViewById(R.id.tvPackageKmInterval);
+        TextView tvPackagePriceDialog = dialogView.findViewById(R.id.tvPackagePriceDialog);
+        TextView tvTotalPrice = dialogView.findViewById(R.id.tvTotalPrice);
+        Spinner spinnerVehicle = dialogView.findViewById(R.id.spinnerVehicle);
+        RadioGroup rgPaymentMethod = dialogView.findViewById(R.id.rgPaymentMethod);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+        Button btnConfirmPayment = dialogView.findViewById(R.id.btnConfirmPayment);
+        FrameLayout loadingOverlayDialog = dialogView.findViewById(R.id.loadingOverlayDialog);
+
+        // Set package data
+        tvPackageNameDialog.setText(packageModel.getName());
+        tvPackageDescription.setText(packageModel.getDescription() != null ? packageModel.getDescription() : "Gói dịch vụ bảo dưỡng xe");
+        tvPackageDuration.setText(String.format(Locale.getDefault(), "%d ngày", packageModel.getDuration()));
+        tvPackageKmInterval.setText(String.format(Locale.getDefault(), "%,d km", packageModel.getKmInterval()));
+
+        NumberFormat formatter = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        String formattedPrice = formatter.format(packageModel.getPrice()) + " VND";
+        tvPackagePriceDialog.setText(formattedPrice);
+        tvTotalPrice.setText(formattedPrice);
+
+        // Load vehicles
+        loadingOverlayDialog.setVisibility(View.VISIBLE);
+        loadVehiclesForDialog(spinnerVehicle, loadingOverlayDialog);
+
+        // Cancel button
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        // Confirm payment button
+        btnConfirmPayment.setOnClickListener(v -> {
+            if (vehiclesList.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng thêm xe trước khi đăng ký gói", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            int selectedPosition = spinnerVehicle.getSelectedItemPosition();
+            if (selectedPosition < 0 || selectedPosition >= vehiclesList.size()) {
+                Toast.makeText(getContext(), "Vui lòng chọn xe", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            VehicleModel selectedVehicle = vehiclesList.get(selectedPosition);
+            String paymentMethod = getSelectedPaymentMethod(rgPaymentMethod);
+
+            // Show loading
+            loadingOverlayDialog.setVisibility(View.VISIBLE);
+            btnConfirmPayment.setEnabled(false);
+
+            // Create subscription
+            createSubscription(packageModel, selectedVehicle, paymentMethod, dialog, loadingOverlayDialog, btnConfirmPayment);
+        });
+
+        dialog.show();
+    }
+
+    private void loadVehiclesForDialog(Spinner spinnerVehicle, FrameLayout loadingOverlay) {
+        tokenHelper.getTokenAndExecute(token -> {
+            if (token != null && !token.isEmpty()) {
+                vehiclesApi.getMyVehicles("Bearer " + token).enqueue(new Callback<VehicleResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<VehicleResponse> call, @NonNull Response<VehicleResponse> response) {
+                        loadingOverlay.setVisibility(View.GONE);
+                        if (response.isSuccessful() && response.body() != null) {
+                            VehicleResponse vehicleResponse = response.body();
+                            if (vehicleResponse.isSuccess() && vehicleResponse.getData() != null) {
+                                vehiclesList.clear();
+                                vehiclesList.addAll(vehicleResponse.getData());
+
+                                // Create adapter for spinner
+                                List<String> vehicleNames = new ArrayList<>();
+                                for (VehicleModel vehicle : vehiclesList) {
+                                    vehicleNames.add(vehicle.getVehicleName() + " - " + vehicle.getPlateNumber());
+                                }
+
+                                ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                                        getContext(),
+                                        android.R.layout.simple_spinner_item,
+                                        vehicleNames
+                                );
+                                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                                spinnerVehicle.setAdapter(adapter);
+                            } else {
+                                Toast.makeText(getContext(), "Không tìm thấy xe nào", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "Không thể tải danh sách xe", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<VehicleResponse> call, @NonNull Throwable t) {
+                        loadingOverlay.setVisibility(View.GONE);
+                        Log.e(TAG, "Error loading vehicles: " + t.getMessage(), t);
+                        Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                loadingOverlay.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private String getSelectedPaymentMethod(RadioGroup rgPaymentMethod) {
+        int selectedId = rgPaymentMethod.getCheckedRadioButtonId();
+        if (selectedId == R.id.rbCash) {
+            return "Tiền mặt";
+        } else if (selectedId == R.id.rbMomo) {
+            return "Ví MoMo";
+        } else if (selectedId == R.id.rbBankTransfer) {
+            return "Chuyển khoản ngân hàng";
+        }
+        return "Tiền mặt";
+    }
+
+    private void createSubscription(PackageModel packageModel, VehicleModel vehicle, String paymentMethod,
+                                     AlertDialog dialog, FrameLayout loadingOverlay, Button btnConfirmPayment) {
+        tokenHelper.getTokenAndExecute(token -> {
+            if (token != null && !token.isEmpty()) {
+                // Calculate dates
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+                sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+
+                Date startDate = new Date();
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(startDate);
+                calendar.add(Calendar.DAY_OF_YEAR, packageModel.getDuration());
+                Date endDate = calendar.getTime();
+
+                // Create request
+                CreateSubscriptionRequest request = new CreateSubscriptionRequest();
+                request.setVehicleId(vehicle.getId());
+                request.setPackageId(packageModel.getId());
+                request.setStartDate(sdf.format(startDate));
+                request.setEndDate(sdf.format(endDate));
+
+                Log.d(TAG, "Creating subscription: vehicleId=" + vehicle.getId() + ", packageId=" + packageModel.getId());
+
+                vehicleSubscriptionApi.createSubscription("Bearer " + token, request)
+                        .enqueue(new Callback<SingleSubscriptionResponse>() {
+                            @Override
+                            public void onResponse(@NonNull Call<SingleSubscriptionResponse> call,
+                                                   @NonNull Response<SingleSubscriptionResponse> response) {
+                                loadingOverlay.setVisibility(View.GONE);
+                                btnConfirmPayment.setEnabled(true);
+
+                                if (response.isSuccessful() && response.body() != null) {
+                                    SingleSubscriptionResponse subscriptionResponse = response.body();
+                                    if (subscriptionResponse.isSuccess()) {
+                                        Toast.makeText(getContext(),
+                                                "Thanh toán thành công! Gói đã được kích hoạt.",
+                                                Toast.LENGTH_LONG).show();
+                                        dialog.dismiss();
+
+                                        // Reload vehicle subscriptions to show the new one
+                                        loadVehicleSubscriptions();
+                                    } else {
+                                        Toast.makeText(getContext(),
+                                                "Lỗi: " + subscriptionResponse.getMessage(),
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                } else {
+                                    try {
+                                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                                        Log.e(TAG, "Error creating subscription: " + errorBody);
+                                        Toast.makeText(getContext(),
+                                                "Không thể tạo gói: " + response.code(),
+                                                Toast.LENGTH_SHORT).show();
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Error reading error body", e);
+                                        Toast.makeText(getContext(),
+                                                "Không thể tạo gói",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull Call<SingleSubscriptionResponse> call, @NonNull Throwable t) {
+                                loadingOverlay.setVisibility(View.GONE);
+                                btnConfirmPayment.setEnabled(true);
+                                Log.e(TAG, "Error creating subscription: " + t.getMessage(), t);
+                                Toast.makeText(getContext(),
+                                        "Lỗi kết nối: " + t.getMessage(),
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            } else {
+                loadingOverlay.setVisibility(View.GONE);
+                btnConfirmPayment.setEnabled(true);
+                Toast.makeText(getContext(), "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
 
