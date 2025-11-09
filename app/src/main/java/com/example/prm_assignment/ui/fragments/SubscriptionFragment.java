@@ -41,6 +41,7 @@ import com.example.prm_assignment.data.remote.PaymentApi;
 import com.example.prm_assignment.data.remote.PaymentRetrofitClient;
 import com.example.prm_assignment.data.remote.VehiclesRetrofitClient;
 import com.example.prm_assignment.data.repository.VehicleSubscriptionRepository;
+import com.example.prm_assignment.data.repository.PaymentRepository;
 import com.example.prm_assignment.ui.adapters.SubscriptionAdapter;
 import com.example.prm_assignment.utils.SubscriptionManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -63,6 +64,7 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
     private RecyclerView recyclerView;
     private SubscriptionAdapter adapter;
     private VehicleSubscriptionRepository repository;
+    private PaymentRepository paymentRepository;
     private ProgressBar loadingOverlay;
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextView tvEmptyState;
@@ -71,6 +73,7 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
 
     private List<VehicleModel> vehiclesList = new ArrayList<>();
     private List<PackageModel> packagesList = new ArrayList<>();
+    private List<VehicleSubscriptionResponse.VehicleSubscription> subscriptions = new ArrayList<>();
 
     @Nullable
     @Override
@@ -106,6 +109,7 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
 
     private void setupRepository() {
         repository = new VehicleSubscriptionRepository();
+        paymentRepository = new PaymentRepository();
         paymentApi = PaymentRetrofitClient.getInstance().getPaymentApi();
     }
 
@@ -206,10 +210,12 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
                                 swipeRefreshLayout.setRefreshing(false);
                                 
                                 if (response.getData() != null && !response.getData().isEmpty()) {
-                                    adapter.setSubscriptions(response.getData());
+                                    subscriptions = response.getData(); // Store in class field
+                                    adapter.setSubscriptions(subscriptions);
                                     showEmptyState(false);
                                 } else {
-                                    adapter.setSubscriptions(new ArrayList<>());
+                                    subscriptions = new ArrayList<>(); // Clear the list
+                                    adapter.setSubscriptions(subscriptions);
                                     showEmptyState(true);
                                 }
                             }
@@ -473,6 +479,68 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
         });
     }
 
+    private void updateSubscriptionStatusWithData(String subscriptionId, String newStatus) {
+        Log.d(TAG, "Updating subscription status with full data for: " + subscriptionId);
+
+        // Find the subscription in our current list to get all its data
+        VehicleSubscriptionResponse.VehicleSubscription targetSubscription = null;
+        for (VehicleSubscriptionResponse.VehicleSubscription sub : subscriptions) {
+            if (sub.getId().equals(subscriptionId)) {
+                targetSubscription = sub;
+                break;
+            }
+        }
+
+        if (targetSubscription == null) {
+            Log.e(TAG, "Subscription not found in current list: " + subscriptionId);
+            showError("Subscription not found");
+            return;
+        }
+
+        final VehicleSubscriptionResponse.VehicleSubscription subscription = targetSubscription;
+
+        TokenHelper.Companion.getAccessTokenAsync(requireContext(), new TokenHelper.TokenAsyncCallback() {
+            @Override
+            public void onResult(String token) {
+                if (token == null || token.isEmpty()) {
+                    showError("Authentication required");
+                    return;
+                }
+
+                // Create update request with ALL fields from the subscription
+                UpdateSubscriptionRequest request = new UpdateSubscriptionRequest();
+                request.setVehicleId(subscription.getVehicleInfo().getId());
+                request.setPackageId(subscription.getPackageInfo().getId());
+                request.setStartDate(subscription.getStartDate());
+                request.setEndDate(subscription.getEndDate());
+                request.setStatus(newStatus);  // Only change the status
+
+                Log.d(TAG, "Sending update with: vehicleId=" + subscription.getVehicleInfo().getId() +
+                          ", packageId=" + subscription.getPackageInfo().getId() + ", status=" + newStatus);
+
+                repository.updateSubscription(token, subscriptionId, request,
+                        new VehicleSubscriptionRepository.SingleSubscriptionCallback() {
+                    @Override
+                    public void onSuccess(VehicleSubscriptionResponse.VehicleSubscription updatedSubscription) {
+                        Log.d(TAG, "Subscription status updated successfully to " + newStatus);
+                        Toast.makeText(requireContext(),
+                            "Đã kích hoạt gói thành công! ✅",
+                            Toast.LENGTH_SHORT).show();
+                        loadSubscriptions();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Error updating subscription status: " + error);
+                        Toast.makeText(requireContext(),
+                            "Lỗi cập nhật trạng thái: " + error,
+                            Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+    }
+
     private void showDeleteConfirmationDialog(VehicleSubscriptionResponse.VehicleSubscription subscription) {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete Subscription")
@@ -677,6 +745,9 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
                     url.contains("code=00") || url.contains("success=true")) {
                     Log.d(TAG, "Payment successful! Auto-closing dialog and updating subscription");
 
+                    // Extract orderCode from URL
+                    int orderCode = extractOrderCodeFromUrl(url);
+
                     // Show success message
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
@@ -689,8 +760,14 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
                                 dialogHolder[0].dismiss();
                             }
 
-                            // Update subscription status to COMPLETED
-                            updateSubscriptionStatus(subscriptionId, "COMPLETED");
+                            // Call webhook endpoint to update subscription status
+                            if (orderCode > 0) {
+                                handlePaymentWebhook(orderCode, "PAID");
+                            } else {
+                                // Fallback to direct status update if orderCode not found
+                                Log.w(TAG, "OrderCode not found in URL, using direct update");
+                                updateSubscriptionStatusWithData(subscriptionId, "ACTIVE");
+                            }
 
                             // Refresh subscriptions after a short delay
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -761,6 +838,60 @@ public class SubscriptionFragment extends Fragment implements SubscriptionAdapte
         dialog.show();
 
         Log.d(TAG, "WebView dialog opened with URL: " + paymentUrl);
+    }
+
+    /**
+     * Extract orderCode from PayOS success URL
+     * URL format: https://example.com/payment/success?code=00&id=xxx&orderCode=123456
+     */
+    private int extractOrderCodeFromUrl(String url) {
+        try {
+            if (url.contains("orderCode=")) {
+                String[] parts = url.split("orderCode=");
+                if (parts.length > 1) {
+                    String orderCodeStr = parts[1].split("&")[0];
+                    return Integer.parseInt(orderCodeStr);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error extracting orderCode from URL: " + url, e);
+        }
+        return -1;
+    }
+
+    /**
+     * Handle payment webhook - sends orderCode and status to backend
+     * Backend will update subscription status to ACTIVE automatically
+     */
+    private void handlePaymentWebhook(int orderCode, String status) {
+        Log.d(TAG, "Handling payment webhook - orderCode: " + orderCode + ", status: " + status);
+
+        paymentRepository.handlePaymentWebhook(orderCode, status,
+            new PaymentRepository.WebhookCallback() {
+                @Override
+                public void onSuccess(String message) {
+                    Log.d(TAG, "Webhook processed successfully: " + message);
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(requireContext(),
+                                "Đã kích hoạt gói thành công! ✅",
+                                Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Webhook processing failed: " + error);
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(requireContext(),
+                                "Lỗi cập nhật trạng thái: " + error,
+                                Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }
+            });
     }
 }
 

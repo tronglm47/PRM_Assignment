@@ -187,8 +187,13 @@ public class VehicleSubscriptionRepository {
     public void updateSubscriptionStatus(String token, String subscriptionId, String status,
                                         SingleSubscriptionCallback callback) {
         String authHeader = "Bearer " + token;
-        UpdateSubscriptionStatusRequest request = new UpdateSubscriptionStatusRequest(status);
-        api.updateSubscriptionStatus(authHeader, subscriptionId, request)
+
+        // Use updateSubscription endpoint with only status field
+        // because backend returns 404 for /status endpoint
+        UpdateSubscriptionRequest request = new UpdateSubscriptionRequest();
+        request.setStatus(status);
+
+        api.updateSubscription(authHeader, subscriptionId, request)
            .enqueue(new Callback<SingleSubscriptionResponse>() {
             @Override
             public void onResponse(@NonNull Call<SingleSubscriptionResponse> call, 

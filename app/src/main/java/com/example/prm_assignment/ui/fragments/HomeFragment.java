@@ -998,7 +998,9 @@ public class HomeFragment extends Fragment {
                             }
 
                             // Update subscription status to COMPLETED
-                            updateSubscriptionStatus(subscriptionId, "COMPLETED");
+                            // Note: This will fail if subscription is not in vehicleSubscriptions list
+                            // For HomeFragment, we just show success - status updates happen in SubscriptionFragment
+                            Log.d(TAG, "Payment successful for subscription: " + subscriptionId);
 
                             // Refresh subscriptions after a short delay
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
