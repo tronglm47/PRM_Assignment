@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -16,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.example.prm_assignment.R;
 import com.example.prm_assignment.data.TokenHelper;
 import com.example.prm_assignment.data.model.AppointmentRequest;
@@ -23,13 +25,18 @@ import com.example.prm_assignment.data.model.BaseResponse;
 import com.example.prm_assignment.data.model.CenterModel;
 import com.example.prm_assignment.data.model.CentersResponse;
 import com.example.prm_assignment.data.model.CustomerResponse;
+import com.example.prm_assignment.data.model.SlotModel;
+import com.example.prm_assignment.data.model.SlotsResponse;
 import com.example.prm_assignment.data.remote.AppointmentApi;
 import com.example.prm_assignment.data.remote.AppointmentRetrofitClient;
 import com.example.prm_assignment.data.remote.CenterApi;
 import com.example.prm_assignment.data.remote.CenterRetrofitClient;
 import com.example.prm_assignment.data.remote.CustomerApi;
 import com.example.prm_assignment.data.remote.CustomerRetrofitClient;
+import com.example.prm_assignment.data.remote.SlotApi;
+import com.example.prm_assignment.data.remote.SlotRetrofitClient;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -44,17 +51,20 @@ public class BookingFragment extends Fragment {
     private String vehicleId;
 
     // UI
-    private LinearLayout centerContainer;
-    private TextView tvDate, tvTime;
+    private LinearLayout centerContainer, slotContainer;
+    private TextView tvDate, tvNoSlots;
     private Button btnConfirm;
     private ProgressBar progressBar;
 
     private String selectedCenterId;
-    private String selectedDate, selectedTime;
+    private String selectedDate;
+    private String selectedSlotId;
+    private SlotModel selectedSlot;
 
     private AppointmentApi appointmentApi;
     private CenterApi centerApi;
     private CustomerApi customerApi;
+    private SlotApi slotApi;
     private TokenHelper tokenHelper;
 
     public static BookingFragment newInstance(String vehicleId) {
@@ -74,6 +84,7 @@ public class BookingFragment extends Fragment {
         appointmentApi = AppointmentRetrofitClient.getInstance().getAppointmentApi();
         centerApi = CenterRetrofitClient.getInstance().getCenterApi();
         customerApi = CustomerRetrofitClient.getInstance().getCustomerApi();
+        slotApi = SlotRetrofitClient.getInstance().getSlotApi();
         tokenHelper = new TokenHelper(requireContext());
     }
 
@@ -84,8 +95,9 @@ public class BookingFragment extends Fragment {
 
         // Mapping UI
         centerContainer = view.findViewById(R.id.centerContainer);
+        slotContainer = view.findViewById(R.id.slotContainer);
         tvDate = view.findViewById(R.id.tvDate);
-        tvTime = view.findViewById(R.id.tvTime);
+        tvNoSlots = view.findViewById(R.id.tvNoSlots);
         btnConfirm = view.findViewById(R.id.btnConfirm);
         progressBar = view.findViewById(R.id.progressBar);
 
@@ -94,9 +106,6 @@ public class BookingFragment extends Fragment {
 
         // Select date
         tvDate.setOnClickListener(v -> showDatePicker());
-
-        // Select time
-        tvTime.setOnClickListener(v -> showTimePicker());
 
         // Confirm booking
         btnConfirm.setOnClickListener(v -> createAppointment());
@@ -134,13 +143,148 @@ public class BookingFragment extends Fragment {
         });
     }
 
-    // ================== Setup dynamic center buttons ==================
+    // ================== Setup dynamic center buttons with images ==================
     private void setupCenterButtons(List<CenterModel> centers) {
         centerContainer.removeAllViews();
 
         for (CenterModel c : centers) {
+            View itemView = LayoutInflater.from(requireContext()).inflate(R.layout.item_center, centerContainer, false);
+
+            ImageView ivCenterImage = itemView.findViewById(R.id.ivCenterImage);
+            TextView tvCenterName = itemView.findViewById(R.id.tvCenterName);
+            TextView tvCenterAddress = itemView.findViewById(R.id.tvCenterAddress);
+            TextView tvCenterPhone = itemView.findViewById(R.id.tvCenterPhone);
+
+            tvCenterName.setText(c.getName());
+            tvCenterAddress.setText(c.getAddress());
+            tvCenterPhone.setText(c.getPhone());
+
+            // Load image using Glide
+            if (c.getImage() != null && !c.getImage().isEmpty()) {
+                Glide.with(requireContext())
+                        .load(c.getImage())
+                        .placeholder(R.drawable.ic_image_placeholder)
+                        .error(R.drawable.ic_image_placeholder)
+                        .into(ivCenterImage);
+            }
+
+            itemView.setOnClickListener(v -> {
+                selectedCenterId = c.getId();
+                highlightSelectedCenter(itemView);
+
+                // Load slots when center is selected
+                if (selectedDate != null) {
+                    loadSlots();
+                }
+            });
+
+            centerContainer.addView(itemView);
+        }
+    }
+
+    // ================== Highlight selected center ==================
+    private void highlightSelectedCenter(View selected) {
+        for (int i = 0; i < centerContainer.getChildCount(); i++) {
+            View child = centerContainer.getChildAt(i);
+            child.setBackgroundResource(child == selected
+                    ? R.drawable.bg_button_selected
+                    : R.drawable.bg_button_unselected);
+        }
+    }
+
+    // ================== Date picker ==================
+    private void showDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+        long today = calendar.getTimeInMillis();
+
+        calendar.add(Calendar.DAY_OF_MONTH, 7);
+        long maxDate = calendar.getTimeInMillis();
+
+        DatePickerDialog dialog = new DatePickerDialog(requireContext(),
+                (view, year, month, day) -> {
+                    Calendar selectedCal = Calendar.getInstance();
+                    selectedCal.set(year, month, day);
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    selectedDate = sdf.format(selectedCal.getTime());
+
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                    tvDate.setText(displayFormat.format(selectedCal.getTime()));
+
+                    // Load slots when date is selected
+                    if (selectedCenterId != null) {
+                        loadSlots();
+                    }
+                },
+                Calendar.getInstance().get(Calendar.YEAR),
+                Calendar.getInstance().get(Calendar.MONTH),
+                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+        );
+
+        dialog.getDatePicker().setMinDate(today);
+        dialog.getDatePicker().setMaxDate(maxDate);
+        dialog.show();
+    }
+
+    // ================== Load slots ==================
+    private void loadSlots() {
+        if (selectedCenterId == null || selectedDate == null) {
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+        slotContainer.removeAllViews();
+        tvNoSlots.setVisibility(View.GONE);
+        selectedSlotId = null;
+        selectedSlot = null;
+
+        tokenHelper.getTokenAndExecute(token -> {
+            slotApi.getSlots("Bearer " + token, selectedCenterId, selectedDate)
+                    .enqueue(new Callback<SlotsResponse>() {
+                        @Override
+                        public void onResponse(Call<SlotsResponse> call, Response<SlotsResponse> response) {
+                            progressBar.setVisibility(View.GONE);
+                            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                                List<SlotModel> slots = response.body().getData();
+                                if (slots != null && !slots.isEmpty()) {
+                                    setupSlotButtons(slots);
+                                    tvNoSlots.setVisibility(View.GONE);
+                                } else {
+                                    tvNoSlots.setText("Không có khung giờ nào khả dụng cho ngày này");
+                                    tvNoSlots.setVisibility(View.VISIBLE);
+                                }
+                            } else {
+                                tvNoSlots.setText("Không thể tải danh sách khung giờ");
+                                tvNoSlots.setVisibility(View.VISIBLE);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<SlotsResponse> call, Throwable t) {
+                            progressBar.setVisibility(View.GONE);
+                            tvNoSlots.setText("Lỗi mạng: " + t.getMessage());
+                            tvNoSlots.setVisibility(View.VISIBLE);
+                        }
+                    });
+        });
+    }
+
+    // ================== Setup slot buttons ==================
+    private void setupSlotButtons(List<SlotModel> slots) {
+        slotContainer.removeAllViews();
+
+        for (SlotModel slot : slots) {
             Button btn = new Button(requireContext());
-            btn.setText(c.getName());
+
+            String slotText = slot.getStartTime() + " - " + slot.getEndTime();
+
+            if (!slot.isAvailable()) {
+                slotText += " (Đã đầy)";
+                btn.setEnabled(false);
+                btn.setAlpha(0.5f);
+            }
+
+            btn.setText(slotText);
             btn.setAllCaps(false);
             btn.setTextColor(getResources().getColor(android.R.color.black));
             btn.setBackgroundResource(R.drawable.bg_button_unselected);
@@ -154,68 +298,25 @@ public class BookingFragment extends Fragment {
             btn.setLayoutParams(params);
 
             btn.setOnClickListener(v -> {
-                selectedCenterId = c.getId();
-                highlightSelectedButton(btn);
+                selectedSlotId = slot.getId();
+                selectedSlot = slot;
+                highlightSelectedSlot(btn);
             });
 
-            centerContainer.addView(btn);
+            slotContainer.addView(btn);
         }
     }
 
-    // ================== Highlight selected center ==================
-    private void highlightSelectedButton(Button selected) {
-        for (int i = 0; i < centerContainer.getChildCount(); i++) {
-            View child = centerContainer.getChildAt(i);
-            if (child instanceof Button) {
+    // ================== Highlight selected slot ==================
+    private void highlightSelectedSlot(Button selected) {
+        for (int i = 0; i < slotContainer.getChildCount(); i++) {
+            View child = slotContainer.getChildAt(i);
+            if (child instanceof Button && child.isEnabled()) {
                 child.setBackgroundResource(child == selected
                         ? R.drawable.bg_button_selected
                         : R.drawable.bg_button_unselected);
             }
         }
-    }
-
-    // ================== Date picker ==================
-    private void showDatePicker() {
-        Calendar calendar = Calendar.getInstance();
-
-        // Giới hạn ngày
-        long today = calendar.getTimeInMillis();
-
-        // Cho phép chọn tối đa 7 ngày tiếp theo
-        calendar.add(Calendar.DAY_OF_MONTH, 7);
-        long maxDate = calendar.getTimeInMillis();
-
-        // Tạo DatePickerDialog
-        DatePickerDialog dialog = new DatePickerDialog(requireContext(),
-                (view, year, month, day) -> {
-                    selectedDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, day);
-                    tvDate.setText(selectedDate);
-                },
-                Calendar.getInstance().get(Calendar.YEAR),
-                Calendar.getInstance().get(Calendar.MONTH),
-                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-        );
-
-        // Áp dụng giới hạn ngày
-        dialog.getDatePicker().setMinDate(today);
-        dialog.getDatePicker().setMaxDate(maxDate);
-
-        dialog.show();
-    }
-
-
-    // ================== Time picker ==================
-    private void showTimePicker() {
-        Calendar calendar = Calendar.getInstance();
-        TimePickerDialog dialog = new TimePickerDialog(requireContext(),
-                (view, hour, minute) -> {
-                    selectedTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
-                    tvTime.setText(selectedTime);
-                },
-                calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE),
-                true);
-        dialog.show();
     }
 
     // ================== Create Appointment ==================
@@ -224,21 +325,21 @@ public class BookingFragment extends Fragment {
             Toast.makeText(getContext(), "Vui lòng chọn trung tâm", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (selectedDate == null || selectedTime == null) {
-            Toast.makeText(getContext(), "Vui lòng chọn ngày và giờ", Toast.LENGTH_SHORT).show();
+        if (selectedDate == null) {
+            Toast.makeText(getContext(), "Vui lòng chọn ngày", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (selectedSlotId == null || selectedSlot == null) {
+            Toast.makeText(getContext(), "Vui lòng chọn khung giờ", Toast.LENGTH_SHORT).show();
             return;
         }
 
         progressBar.setVisibility(View.VISIBLE);
         btnConfirm.setEnabled(false);
 
-        // Tạo thời gian ISO
-        String startTime = selectedDate + "T" + selectedTime + ":00.000Z";
-        String[] parts = selectedTime.split(":");
-        int hour = Integer.parseInt(parts[0]);
-        int minute = Integer.parseInt(parts[1]);
-        int endHour = (hour + 2) % 24;
-        String endTime = String.format(Locale.getDefault(), "%sT%02d:%02d:00.000Z", selectedDate, endHour, minute);
+        // Tạo thời gian ISO từ slot
+        String startTime = selectedDate + "T" + selectedSlot.getStartTime() + ":00.000Z";
+        String endTime = selectedDate + "T" + selectedSlot.getEndTime() + ":00.000Z";
 
         // Bước 1️⃣: Lấy userId từ /auth/profile
         tokenHelper.getUserIdFromProfile(userId -> {
@@ -246,6 +347,7 @@ public class BookingFragment extends Fragment {
                 progressBar.setVisibility(View.GONE);
                 btnConfirm.setEnabled(true);
                 Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+                return null;
             }
 
             // Bước 2️⃣: Lấy customerId bằng userId
@@ -257,12 +359,13 @@ public class BookingFragment extends Fragment {
                                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                                     String customerId = response.body().getData().getId();
 
-                                    // Bước 3️⃣: Gửi request tạo appointment
+                                    // Bước 3️⃣: Gửi request tạo appointment với slot_id
                                     AppointmentRequest request = new AppointmentRequest(
                                             null,
                                             customerId,
                                             vehicleId,
                                             selectedCenterId,
+                                            selectedSlotId,
                                             startTime,
                                             endTime,
                                             "pending"

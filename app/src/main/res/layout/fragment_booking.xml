@@ -2,13 +2,15 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="24dp"
+    android:paddingBottom="80dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingBottom="80dp">
 
         <!-- 🔹 Header có nút Back và tiêu đề -->
         <LinearLayout
@@ -57,55 +59,47 @@
 
         <!-- 🔹 Chọn ngày & giờ -->
         <TextView
-            android:text="Chọn ngày và giờ"
+            android:text="Chọn ngày"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:text="Chọn ngày"
+            android:background="@drawable/bg_box"
+            android:gravity="center"
+            android:padding="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 🔹 Chọn slot thời gian -->
+        <TextView
+            android:text="Chọn khung giờ"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:id="@+id/slotContainer"
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:weightSum="2">
+            android:layout_marginBottom="20dp" />
 
-            <TextView
-                android:id="@+id/tvDate"
-                android:text="Chọn ngày"
-                android:background="@drawable/bg_box"
-                android:gravity="center"
-                android:padding="12dp"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content" />
-
-            <View
-                android:layout_width="16dp"
-                android:layout_height="match_parent" />
-
-            <TextView
-                android:id="@+id/tvTime"
-                android:text="Chọn giờ"
-                android:background="@drawable/bg_box"
-                android:gravity="center"
-                android:padding="12dp"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content" />
-
-
-        </LinearLayout>
         <TextView
-            android:id="@+id/tvDuration"
+            android:id="@+id/tvNoSlots"
+            android:text="Vui lòng chọn trung tâm và ngày để xem các khung giờ khả dụng"
+            android:textColor="@android:color/darker_gray"
+            android:textStyle="italic"
+            android:gravity="center"
+            android:visibility="visible"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Thời lượng dịch vụ: 2 giờ"
-            android:textColor="@android:color/holo_blue_dark"
-            android:textStyle="italic"
-            android:paddingTop="4dp"
-            android:textSize="15sp"/>
-
+            android:layout_marginBottom="20dp" />
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -121,6 +115,7 @@
             android:backgroundTint="@color/navy_blue"
             android:textColor="@color/white"
             android:layout_marginTop="24dp"
+            android:layout_marginBottom="40dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
