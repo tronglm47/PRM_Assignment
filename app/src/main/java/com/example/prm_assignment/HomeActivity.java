@@ -33,6 +33,9 @@ public class HomeActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_vehicles) {
                 switchTo(new VehiclesFragment());
                 return true;
+            } else if (itemId == R.id.nav_subscriptions) {
+                switchTo(new SubscriptionFragment());
+                return true;
             } else if (itemId == R.id.nav_records) {
                 switchTo(new RecordsFragment());
                 return true;

@@ -97,6 +97,9 @@ dependencies {
     // ViewPager2 for image slider
     implementation("androidx.viewpager2:viewpager2:1.0.0")
 
+    // SwipeRefreshLayout
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

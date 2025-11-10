@@ -10,4 +10,25 @@
     <string name="reg_id_placeholder">1421451223</string>
     <string name="reg_id_format">%s</string>
     <string name="book_service">Book Service</string>
+    
+    <!-- Subscription strings -->
+    <string name="vehicle_image">Vehicle image</string>
+    <string name="days_remaining">Days remaining</string>
+    <string name="date_range">Date range</string>
+    <string name="kilometers">Kilometers</string>
+    <string name="price">Price</string>
+    <string name="renew">Renew</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="no_subscriptions">No subscriptions found.\nTap + to create one.</string>
+    <string name="add_subscription">Add subscription</string>
+    <string name="select_vehicle">Select Vehicle</string>
+    <string name="select_package">Select Package</string>
+    <string name="start_date">Start Date</string>
+    <string name="select_date">Select date</string>
+    <string name="select">Select</string>
+    <string name="end_date_note">End date will be calculated automatically based on package duration</string>
+    <string name="renew_info">Renewing subscription</string>
+    <string name="select_new_package">Select New Package</string>
+    <string name="renew_note">The new subscription will start from the end date of the current subscription</string>
 </resources>
