@@ -2,6 +2,8 @@ package com.example.prm_assignment.ui.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,18 +32,24 @@ import com.example.prm_assignment.data.TokenHelper;
 import com.example.prm_assignment.data.model.CreateSubscriptionRequest;
 import com.example.prm_assignment.data.model.PackageModel;
 import com.example.prm_assignment.data.model.PackagesResponse;
+import com.example.prm_assignment.data.model.PaymentRequest;
+import com.example.prm_assignment.data.model.PaymentResponse;
 import com.example.prm_assignment.data.model.ProfileResponse;
 import com.example.prm_assignment.data.model.SingleSubscriptionResponse;
 import com.example.prm_assignment.data.model.VehicleModel;
 import com.example.prm_assignment.data.model.VehicleResponse;
+import com.example.prm_assignment.data.model.VehicleSubscriptionResponse;
 import com.example.prm_assignment.data.remote.PackagesApi;
 import com.example.prm_assignment.data.remote.PackagesRetrofitClient;
+import com.example.prm_assignment.data.remote.PaymentApi;
+import com.example.prm_assignment.data.remote.PaymentRetrofitClient;
 import com.example.prm_assignment.data.remote.ProfileApi;
 import com.example.prm_assignment.data.remote.ProfileRetrofitClient;
 import com.example.prm_assignment.data.remote.VehiclesApi;
 import com.example.prm_assignment.data.remote.VehiclesRetrofitClient;
 import com.example.prm_assignment.data.remote.VehicleSubscriptionApi;
 import com.example.prm_assignment.data.remote.VehicleSubscriptionRetrofitClient;
+import com.example.prm_assignment.data.repository.VehicleSubscriptionRepository;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -70,6 +78,7 @@ public class HomeFragment extends Fragment {
     private ProfileApi profileApi;
     private VehiclesApi vehiclesApi;
     private VehicleSubscriptionApi vehicleSubscriptionApi;
+    private PaymentApi paymentApi;
     private List<VehicleModel> vehiclesList = new ArrayList<>();
 
     // Track loading states
@@ -89,6 +98,7 @@ public class HomeFragment extends Fragment {
         profileApi = ProfileRetrofitClient.getInstance().getProfileApi();
         vehiclesApi = VehiclesRetrofitClient.getInstance().getVehiclesApi();
         vehicleSubscriptionApi = VehicleSubscriptionRetrofitClient.getInstance().getVehicleSubscriptionApi();
+        paymentApi = PaymentRetrofitClient.getInstance().getPaymentApi();
 
         // Initialize views
         tvGreeting = view.findViewById(R.id.tvGreeting);
@@ -765,25 +775,24 @@ public class HomeFragment extends Fragment {
                             @Override
                             public void onResponse(@NonNull Call<SingleSubscriptionResponse> call,
                                                    @NonNull Response<SingleSubscriptionResponse> response) {
-                                loadingOverlay.setVisibility(View.GONE);
-                                btnConfirmPayment.setEnabled(true);
-
                                 if (response.isSuccessful() && response.body() != null) {
                                     SingleSubscriptionResponse subscriptionResponse = response.body();
-                                    if (subscriptionResponse.isSuccess()) {
-                                        Toast.makeText(getContext(),
-                                                "Thanh toán thành công! Gói đã được kích hoạt.",
-                                                Toast.LENGTH_LONG).show();
-                                        dialog.dismiss();
+                                    if (subscriptionResponse.isSuccess() && subscriptionResponse.getData() != null) {
+                                        String subscriptionId = subscriptionResponse.getData().getId();
+                                        Log.d(TAG, "Subscription created successfully with ID: " + subscriptionId);
 
-                                        // Reload vehicle subscriptions to show the new one
-                                        loadVehicleSubscriptions();
+                                        // Now create payment link
+                                        createPaymentLink(subscriptionId, packageModel.getPrice(), token, dialog, loadingOverlay, btnConfirmPayment);
                                     } else {
+                                        loadingOverlay.setVisibility(View.GONE);
+                                        btnConfirmPayment.setEnabled(true);
                                         Toast.makeText(getContext(),
                                                 "Lỗi: " + subscriptionResponse.getMessage(),
                                                 Toast.LENGTH_SHORT).show();
                                     }
                                 } else {
+                                    loadingOverlay.setVisibility(View.GONE);
+                                    btnConfirmPayment.setEnabled(true);
                                     try {
                                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
                                         Log.e(TAG, "Error creating subscription: " + errorBody);
@@ -815,6 +824,333 @@ public class HomeFragment extends Fragment {
                 Toast.makeText(getContext(), "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void createPaymentLink(String subscriptionId, double amount, String token,
+                                   AlertDialog dialog, FrameLayout loadingOverlay, Button btnConfirmPayment) {
+        Log.d(TAG, "Creating payment link for subscription: " + subscriptionId);
+
+        // Get customer ID first
+        tokenHelper.getCustomerIdFromProfile(new TokenHelper.CustomerIdCallback() {
+            @Override
+            public void onCustomerIdRetrieved(String customerId) {
+                if (customerId != null && !customerId.isEmpty()) {
+                    // Create payment request
+                    PaymentRequest paymentRequest = new PaymentRequest();
+                    paymentRequest.setSubscriptionId(subscriptionId);
+                    paymentRequest.setCustomerId(customerId);
+                    paymentRequest.setAmount(amount);
+                    paymentRequest.setPaymentType("subscription");
+                    paymentRequest.setReturnUrl("https://example.com/payment/success");
+                    paymentRequest.setCancelUrl("https://example.com/payment/cancel");
+
+                    Log.d(TAG, "Calling payment API");
+
+                    paymentApi.createPayment("Bearer " + token, paymentRequest)
+                            .enqueue(new Callback<PaymentResponse>() {
+                                @Override
+                                public void onResponse(@NonNull Call<PaymentResponse> call,
+                                                       @NonNull Response<PaymentResponse> response) {
+                                    loadingOverlay.setVisibility(View.GONE);
+                                    btnConfirmPayment.setEnabled(true);
+
+                                    if (response.isSuccessful() && response.body() != null) {
+                                        PaymentResponse paymentResponse = response.body();
+                                        if (paymentResponse.isSuccess() && paymentResponse.getData() != null) {
+                                            String paymentUrl = paymentResponse.getData().getPaymentUrl();
+                                            String paymentId = paymentResponse.getData().getId();
+                                            Log.d(TAG, "Payment link created: " + paymentUrl);
+                                            Log.d(TAG, "Payment ID: " + paymentId);
+
+                                            // Close the subscription dialog
+                                            dialog.dismiss();
+
+                                            // Automatically open payment URL in browser
+                                            if (paymentUrl != null && !paymentUrl.isEmpty()) {
+                                                openPaymentInBrowser(paymentUrl, amount, subscriptionId, paymentId, token);
+                                            } else {
+                                                Toast.makeText(getContext(),
+                                                        "Không thể lấy link thanh toán",
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                        } else {
+                                            Toast.makeText(getContext(),
+                                                    "Lỗi tạo thanh toán: " + paymentResponse.getMessage(),
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        try {
+                                            String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                                            Log.e(TAG, "Error creating payment: " + errorBody);
+                                            Toast.makeText(getContext(),
+                                                    "Không thể tạo thanh toán: " + response.code(),
+                                                    Toast.LENGTH_SHORT).show();
+                                        } catch (Exception e) {
+                                            Log.e(TAG, "Error reading error body", e);
+                                            Toast.makeText(getContext(),
+                                                    "Không thể tạo thanh toán",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(@NonNull Call<PaymentResponse> call, @NonNull Throwable t) {
+                                    loadingOverlay.setVisibility(View.GONE);
+                                    btnConfirmPayment.setEnabled(true);
+                                    Log.e(TAG, "Error creating payment link: " + t.getMessage(), t);
+                                    Toast.makeText(getContext(),
+                                            "Lỗi kết nối thanh toán: " + t.getMessage(),
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                } else {
+                    loadingOverlay.setVisibility(View.GONE);
+                    btnConfirmPayment.setEnabled(true);
+                    Toast.makeText(getContext(),
+                            "Không thể lấy thông tin khách hàng",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void openPaymentInBrowser(String paymentUrl, double amount, String subscriptionId, String paymentId, String token) {
+        Log.d(TAG, "Attempting to open payment gateway: " + paymentUrl);
+        Log.d(TAG, "Amount: " + amount);
+        Log.d(TAG, "Subscription ID: " + subscriptionId);
+        Log.d(TAG, "Payment ID: " + paymentId);
+
+        // FORCE WebView for now - to guarantee it works
+        Log.d(TAG, "FORCING WebView dialog for testing");
+        showPaymentWebView(paymentUrl, amount, subscriptionId, paymentId, token);
+
+        // Reload subscriptions after a delay
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            loadVehicleSubscriptions();
+            Log.d(TAG, "Subscriptions reloaded after payment redirect");
+        }, 2000);
+    }
+
+    private boolean isPackageInstalled(String packageName) {
+        try {
+            getContext().getPackageManager().getPackageInfo(packageName, 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void showPaymentWebView(String paymentUrl, double amount, String subscriptionId, String paymentId, String token) {
+        Log.d(TAG, "Opening payment in WebView dialog");
+
+        // Create WebView dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+        // Create WebView
+        android.webkit.WebView webView = new android.webkit.WebView(getContext());
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setDomStorageEnabled(true);
+
+        // Create dialog first so we can reference it in WebViewClient
+        AlertDialog[] dialogHolder = new AlertDialog[1];
+
+        // Set custom WebViewClient to monitor payment completion
+        webView.setWebViewClient(new android.webkit.WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(android.webkit.WebView view, String url) {
+                Log.d(TAG, "WebView URL changed: " + url);
+
+                // Check if payment is successful (PayOS redirects to returnUrl on success)
+                if (url.contains("payment/success") || url.contains("status=PAID") ||
+                    url.contains("code=00") || url.contains("success=true")) {
+                    Log.d(TAG, "Payment successful! Auto-closing dialog and updating subscription");
+
+                    // Show success message
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(getContext(),
+                                "Thanh toán thành công! Đang cập nhật trạng thái...",
+                                Toast.LENGTH_LONG).show();
+
+                            // Close dialog
+                            if (dialogHolder[0] != null) {
+                                dialogHolder[0].dismiss();
+                            }
+
+                            // Update subscription status to COMPLETED
+                            // Note: This will fail if subscription is not in vehicleSubscriptions list
+                            // For HomeFragment, we just show success - status updates happen in SubscriptionFragment
+                            Log.d(TAG, "Payment successful for subscription: " + subscriptionId);
+
+                            // Refresh subscriptions after a short delay
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                loadVehicleSubscriptions();
+                            }, 1500);
+                        });
+                    }
+                    return true;
+                }
+
+                // Check if payment was cancelled
+                if (url.contains("payment/cancel") || url.contains("status=CANCELLED")) {
+                    Log.d(TAG, "Payment cancelled");
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            Toast.makeText(getContext(),
+                                "Thanh toán đã bị hủy",
+                                Toast.LENGTH_SHORT).show();
+
+                            // Close dialog
+                            if (dialogHolder[0] != null) {
+                                dialogHolder[0].dismiss();
+                            }
+                        });
+                    }
+                    return true;
+                }
+
+                // Continue loading in WebView
+                view.loadUrl(url);
+                return true;
+            }
+
+            @Override
+            public void onPageFinished(android.webkit.WebView view, String url) {
+                super.onPageFinished(view, url);
+                Log.d(TAG, "Page finished loading: " + url);
+
+                // Check URL in page content for payment status
+                view.evaluateJavascript(
+                    "(function() { return window.location.href; })();",
+                    value -> {
+                        if (value != null) {
+                            Log.d(TAG, "Current page URL: " + value);
+                            // Check for success indicators in the URL
+                            if (value.contains("success") || value.contains("PAID")) {
+                                shouldOverrideUrlLoading(view, value);
+                            }
+                        }
+                    }
+                );
+            }
+        });
+
+        // Load payment URL
+        webView.loadUrl(paymentUrl);
+
+        builder.setView(webView);
+        builder.setTitle("Thanh toán PayOS");
+        builder.setNegativeButton("Đóng", (dialog, which) -> {
+            dialog.dismiss();
+            loadVehicleSubscriptions();
+        });
+
+        AlertDialog dialog = builder.create();
+        dialogHolder[0] = dialog;
+        dialog.show();
+
+        Log.d(TAG, "WebView dialog opened with URL: " + paymentUrl);
+    }
+
+    private void updateSubscriptionStatus(String subscriptionId, String status) {
+        Log.d(TAG, "Updating subscription status to: " + status);
+
+        TokenHelper.Companion.getAccessTokenAsync(requireContext(), new TokenHelper.TokenAsyncCallback() {
+            @Override
+            public void onResult(String token) {
+                if (token == null || token.isEmpty()) {
+                    Toast.makeText(getContext(), "Authentication required", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                VehicleSubscriptionRepository repository = new VehicleSubscriptionRepository();
+                repository.updateSubscriptionStatus(token, subscriptionId, status,
+                        new VehicleSubscriptionRepository.SingleSubscriptionCallback() {
+                    @Override
+                    public void onSuccess(VehicleSubscriptionResponse.VehicleSubscription subscription) {
+                        Log.d(TAG, "Subscription status updated successfully to " + status);
+                        Toast.makeText(getContext(),
+                            "Đã cập nhật trạng thái thành công! ✅",
+                            Toast.LENGTH_SHORT).show();
+                        loadVehicleSubscriptions();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Error updating subscription status: " + error);
+                        Toast.makeText(getContext(),
+                            "Lỗi cập nhật trạng thái: " + error,
+                            Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+    }
+
+    private void showPaymentLinkDialog(String paymentUrl, double amount) {
+        Log.d(TAG, "Showing payment link dialog");
+
+        // Inflate the payment link dialog layout
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_payment_link, null);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setView(dialogView);
+        builder.setCancelable(true);
+        AlertDialog paymentDialog = builder.create();
+
+        // Initialize dialog views
+        TextView tvSubscriptionAmount = dialogView.findViewById(R.id.tvSubscriptionAmount);
+        Button btnProceedToPayment = dialogView.findViewById(R.id.btnProceedToPayment);
+        Button btnPayLater = dialogView.findViewById(R.id.btnPayLater);
+
+        // Format amount
+        NumberFormat formatter = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        String formattedAmount = formatter.format(amount) + " VND";
+        tvSubscriptionAmount.setText("Số tiền: " + formattedAmount);
+
+        // Proceed to Payment button
+        btnProceedToPayment.setOnClickListener(v -> {
+            Log.d(TAG, "User clicked 'Thanh toán ngay' button");
+            try {
+                Log.d(TAG, "Opening browser with URL: " + paymentUrl);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(browserIntent);
+                Log.d(TAG, "Browser opened successfully");
+
+                Toast.makeText(getContext(),
+                        "Đang mở trang thanh toán...",
+                        Toast.LENGTH_SHORT).show();
+
+                paymentDialog.dismiss();
+
+                // Reload subscriptions after a delay
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    loadVehicleSubscriptions();
+                }, 2000);
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error opening browser: " + e.getMessage(), e);
+                Toast.makeText(getContext(),
+                        "Không thể mở trình duyệt: " + e.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // Pay Later button
+        btnPayLater.setOnClickListener(v -> {
+            Log.d(TAG, "User clicked 'Thanh toán sau' button");
+            Toast.makeText(getContext(),
+                    "Bạn có thể thanh toán sau trong mục 'Lịch sử gói'",
+                    Toast.LENGTH_LONG).show();
+            paymentDialog.dismiss();
+
+            // Reload subscriptions
+            loadVehicleSubscriptions();
+        });
+
+        paymentDialog.show();
     }
 }
 

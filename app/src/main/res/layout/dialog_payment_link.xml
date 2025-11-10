@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@android:color/white">
+
+    <!-- Success Icon -->
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@android:drawable/ic_dialog_info"
+        android:tint="#4CAF50"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Gói đã được tạo!"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#1A237E"
+        android:gravity="center"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Message -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Gói dịch vụ của bạn đã được tạo thành công. Vui lòng hoàn tất thanh toán để kích hoạt gói."
+        android:textSize="16sp"
+        android:textColor="#666666"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Package Info -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="#F5F5F5">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvSubscriptionAmount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Số tiền: 150,000 VND"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FF6B6B"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nhấn nút bên dưới để mở trang thanh toán"
+                android:textSize="14sp"
+                android:textColor="#999999"
+                android:textStyle="italic" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="16dp">
+
+        <!-- Proceed to Payment Button -->
+        <Button
+            android:id="@+id/btnProceedToPayment"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Thanh toán ngay"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#4CAF50"
+            android:layout_marginBottom="12dp"
+            android:paddingHorizontal="24dp" />
+
+        <!-- Pay Later Button -->
+        <Button
+            android:id="@+id/btnPayLater"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Thanh toán sau"
+            android:textColor="#666666"
+            android:textSize="14sp"
+            android:background="?attr/selectableItemBackground"
+            android:paddingVertical="12dp" />
+    </LinearLayout>
+
+</LinearLayout>
+
