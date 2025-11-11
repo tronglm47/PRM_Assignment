@@ -15,25 +15,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Vehicle Image Placeholder -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#E8F5E8">
-
-            <ImageView
-                android:id="@+id/ivVehicleImage"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_gravity="center"
-                android:src="@android:drawable/ic_menu_directions"
-                android:scaleType="centerCrop"
-                android:contentDescription="Vehicle image" />
-        </androidx.cardview.widget.CardView>
-
         <!-- Vehicle Info -->
         <TextView
             android:id="@+id/tvVehicleName"
@@ -138,4 +119,3 @@
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
-

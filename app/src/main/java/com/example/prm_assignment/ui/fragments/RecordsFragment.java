@@ -19,17 +19,24 @@ import com.example.prm_assignment.R;
 import com.example.prm_assignment.data.TokenHelper;
 import com.example.prm_assignment.data.model.AppointmentModel;
 import com.example.prm_assignment.data.model.AppointmentsResponse;
+import com.example.prm_assignment.data.model.CenterModel;
 import com.example.prm_assignment.data.model.CustomerResponse;
 import com.example.prm_assignment.data.model.ProfileResponse;
+import com.example.prm_assignment.data.model.VehicleModel;
 import com.example.prm_assignment.data.remote.AppointmentApi;
 import com.example.prm_assignment.data.remote.AppointmentRetrofitClient;
+import com.example.prm_assignment.data.remote.CenterApi;
+import com.example.prm_assignment.data.remote.CenterRetrofitClient;
 import com.example.prm_assignment.data.remote.CustomerApi;
 import com.example.prm_assignment.data.remote.CustomerRetrofitClient;
 import com.example.prm_assignment.data.remote.ProfileApi;
 import com.example.prm_assignment.data.remote.ProfileRetrofitClient;
+import com.example.prm_assignment.data.remote.VehiclesApi;
+import com.example.prm_assignment.data.remote.VehiclesRetrofitClient;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -48,7 +55,13 @@ public class RecordsFragment extends Fragment {
     private AppointmentApi appointmentApi;
     private ProfileApi profileApi;
     private CustomerApi customerApi;
+    private VehiclesApi vehiclesApi;
+    private CenterApi centerApi;
     private String customerId;
+
+    // Cache for vehicles and centers
+    private List<VehicleModel> myVehicles = new ArrayList<>();
+    private List<CenterModel> allCenters = new ArrayList<>();
 
     @Nullable
     @Override
@@ -60,6 +73,8 @@ public class RecordsFragment extends Fragment {
         appointmentApi = AppointmentRetrofitClient.getInstance().getAppointmentApi();
         profileApi = ProfileRetrofitClient.getInstance().getProfileApi();
         customerApi = CustomerRetrofitClient.getInstance().getCustomerApi();
+        vehiclesApi = VehiclesRetrofitClient.getInstance().getVehiclesApi();
+        centerApi = CenterRetrofitClient.getInstance().getCenterApi();
 
         // Initialize views
         llAppointmentsContainer = view.findViewById(R.id.llAppointmentsContainer);
@@ -71,6 +86,15 @@ public class RecordsFragment extends Fragment {
         loadProfileAndAppointments();
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh data when fragment becomes visible
+        Log.d(TAG, "onResume - Refreshing appointments");
+        showLoading();
+        loadProfileAndAppointments();
     }
 
     private void showLoading() {
@@ -148,8 +172,9 @@ public class RecordsFragment extends Fragment {
                     if (customerResponse.isSuccess() && customerResponse.getData() != null) {
                         customerId = customerResponse.getData().getId();
                         Log.d(TAG, "Customer ID: " + customerId);
-                        // Now fetch appointments with customer_id
-                        fetchAppointments(authHeader, customerId);
+
+                        // Fetch vehicles and centers first, then fetch appointments
+                        fetchVehiclesAndCenters(authHeader, customerId);
                     } else {
                         Log.e(TAG, "Customer data is null");
                         hideLoading();
@@ -173,10 +198,57 @@ public class RecordsFragment extends Fragment {
         });
     }
 
+    private void fetchVehiclesAndCenters(String authHeader, String customerId) {
+        // Fetch vehicles
+        vehiclesApi.getMyVehicles(authHeader).enqueue(new Callback<com.example.prm_assignment.data.model.VehicleResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<com.example.prm_assignment.data.model.VehicleResponse> call,
+                                 @NonNull Response<com.example.prm_assignment.data.model.VehicleResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    myVehicles = response.body().getData();
+                    Log.d(TAG, "✅ Loaded " + (myVehicles != null ? myVehicles.size() : 0) + " vehicles");
+                }
+
+                // Fetch centers
+                centerApi.getCenters(authHeader, null, 1, 100).enqueue(new Callback<com.example.prm_assignment.data.model.CentersResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<com.example.prm_assignment.data.model.CentersResponse> call2,
+                                         @NonNull Response<com.example.prm_assignment.data.model.CentersResponse> response2) {
+                        if (response2.isSuccessful() && response2.body() != null && response2.body().isSuccess()) {
+                            allCenters = response2.body().getData().getCenters();
+                            Log.d(TAG, "✅ Loaded " + (allCenters != null ? allCenters.size() : 0) + " centers");
+                        }
+
+                        // Now fetch appointments with cached data
+                        fetchAppointments(authHeader, customerId);
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<com.example.prm_assignment.data.model.CentersResponse> call2, @NonNull Throwable t) {
+                        Log.e(TAG, "Centers fetch error: " + t.getMessage());
+                        // Continue anyway
+                        fetchAppointments(authHeader, customerId);
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<com.example.prm_assignment.data.model.VehicleResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Vehicles fetch error: " + t.getMessage());
+                // Continue anyway
+                fetchAppointments(authHeader, customerId);
+            }
+        });
+    }
+
     private void fetchAppointments(String authHeader, String customerId) {
         Log.d(TAG, "Fetching appointments for customer: " + customerId);
         Log.d(TAG, "Auth header: " + authHeader);
-        appointmentApi.getAppointments(authHeader, customerId).enqueue(new Callback<AppointmentsResponse>() {
+
+        // Add populate parameter to get detailed vehicle and center info
+        String populate = "vehicle_id,center_id";
+
+        appointmentApi.getAppointments(authHeader, customerId, populate).enqueue(new Callback<AppointmentsResponse>() {
             @Override
             public void onResponse(@NonNull Call<AppointmentsResponse> call, @NonNull Response<AppointmentsResponse> response) {
                 hideLoading();
@@ -194,23 +266,41 @@ public class RecordsFragment extends Fragment {
                         Log.d(TAG, "Appointments list: " + (appointments != null ? "not null" : "null"));
 
                         if (appointments != null && !appointments.isEmpty()) {
-                            Log.d(TAG, "Loaded " + appointments.size() + " appointments");
+                            Log.d(TAG, "✅ Loaded " + appointments.size() + " appointments");
+                            for (int i = 0; i < appointments.size(); i++) {
+                                AppointmentModel apt = appointments.get(i);
+                                Log.d(TAG, "Appointment " + (i+1) + ": ID=" + apt.getId() +
+                                      ", Status=" + apt.getStatus() +
+                                      ", Date=" + apt.getStartTime());
+                                // Log vehicle and center info
+                                if (apt.getVehicleId() != null) {
+                                    Log.d(TAG, "  Vehicle: " + apt.getVehicleId().getVehicleName() +
+                                          " - " + apt.getVehicleId().getPlateNumber());
+                                }
+                                if (apt.getCenterId() != null) {
+                                    Log.d(TAG, "  Center: " + apt.getCenterId().getName());
+                                }
+                            }
                             hideEmptyState();
                             displayAppointments(appointments);
                         } else {
-                            Log.w(TAG, "No appointments found or list is empty");
+                            Log.w(TAG, "❌ No appointments found or list is empty");
                             showEmptyState();
+                            Toast.makeText(getContext(), "Bạn chưa có lịch hẹn nào", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         Log.w(TAG, "Appointments response unsuccessful or data is null");
-                        Log.w(TAG, "Message: " + appointmentsResponse.getMessage());
+                        if (appointmentsResponse.getMessage() != null) {
+                            Log.w(TAG, "Message: " + appointmentsResponse.getMessage());
+                        }
                         showEmptyState();
                     }
                 } else {
                     Log.e(TAG, "Appointments fetch failed: " + response.code());
                     try {
                         if (response.errorBody() != null) {
-                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Error body: " + errorBody);
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error reading error body", e);
@@ -223,7 +313,7 @@ public class RecordsFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<AppointmentsResponse> call, @NonNull Throwable t) {
                 hideLoading();
-                Log.e(TAG, "Appointments fetch error: " + t.getMessage(), t);
+                Log.e(TAG, "❌ Appointments fetch error: " + t.getClass().getSimpleName() + " - " + t.getMessage(), t);
                 showEmptyState();
                 Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -260,35 +350,84 @@ public class RecordsFragment extends Fragment {
         tvStatus.setText(getStatusText(status));
         tvStatus.setBackgroundColor(getStatusColor(status));
 
-        // Set vehicle info - updated to use new field names
+        // Set vehicle info - use cached data if only ID is available
+        String vehicleInfo = "Không rõ";
         if (appointment.getVehicleId() != null) {
-            String vehicleInfo = (appointment.getVehicleId().getVehicleName() != null ?
-                    appointment.getVehicleId().getVehicleName() :
-                    appointment.getVehicleId().getModel()) + " - " +
-                    appointment.getVehicleId().getPlateNumber();
-            tvVehicleInfo.setText(vehicleInfo);
-        } else {
-            tvVehicleInfo.setText("N/A");
-        }
+            String vehicleName = appointment.getVehicleId().getVehicleName();
+            String model = appointment.getVehicleId().getModel();
+            String plateNumber = appointment.getVehicleId().getPlateNumber();
+            String vehicleId = appointment.getVehicleId().getId();
 
-        // Set center info - updated to use 'name' instead of 'centerName'
-        if (appointment.getCenterId() != null) {
-            tvCenterInfo.setText(appointment.getCenterId().getName());
-        } else {
-            tvCenterInfo.setText("N/A");
+            // Check if we have full vehicle data from API
+            if (vehicleName != null || model != null) {
+                vehicleInfo = (vehicleName != null ? vehicleName : model);
+                if (plateNumber != null) {
+                    vehicleInfo += " - " + plateNumber;
+                }
+            } else if (vehicleId != null && myVehicles != null) {
+                // Look up from cached vehicles
+                for (com.example.prm_assignment.data.model.VehicleModel v : myVehicles) {
+                    if (vehicleId.equals(v.getId())) {
+                        vehicleInfo = (v.getVehicleName() != null ? v.getVehicleName() : v.getModel());
+                        if (v.getPlateNumber() != null) {
+                            vehicleInfo += " - " + v.getPlateNumber();
+                        }
+                        Log.d(TAG, "✅ Found vehicle from cache: " + vehicleInfo);
+                        break;
+                    }
+                }
+            }
         }
+        tvVehicleInfo.setText(vehicleInfo);
+
+        // Set center info - use cached data if only ID is available
+        String centerInfo = "Không rõ";
+        if (appointment.getCenterId() != null) {
+            String centerName = appointment.getCenterId().getName();
+            String centerId = appointment.getCenterId().getId();
+
+            // Check if we have full center data from API
+            if (centerName != null && !centerName.isEmpty()) {
+                centerInfo = centerName;
+            } else if (centerId != null && allCenters != null) {
+                // Look up from cached centers
+                for (com.example.prm_assignment.data.model.CenterModel c : allCenters) {
+                    if (centerId.equals(c.getId())) {
+                        centerInfo = c.getName();
+                        Log.d(TAG, "✅ Found center from cache: " + centerInfo);
+                        break;
+                    }
+                }
+            }
+        }
+        tvCenterInfo.setText(centerInfo);
 
         // Set time info
         String timeInfo = formatTime(appointment.getStartTime()) + " - " + formatTime(appointment.getEndTime());
         tvTimeInfo.setText(timeInfo);
 
-        // Set staff info if available - staffId is now a String, not an object
+        // Set staff info if available
         if (appointment.getStaffId() != null && !appointment.getStaffId().isEmpty()) {
             llStaffInfo.setVisibility(View.VISIBLE);
             tvStaffInfo.setText("Staff ID: " + appointment.getStaffId());
         } else {
             llStaffInfo.setVisibility(View.GONE);
         }
+
+        // Add click listener to open detail activity
+        final String finalVehicleInfo = vehicleInfo;
+        final String finalCenterInfo = centerInfo;
+        cardView.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(getContext(),
+                    com.example.prm_assignment.ui.activities.AppointmentDetailActivity.class);
+            intent.putExtra("appointment_id", appointment.getId());
+            intent.putExtra("date", formattedDate);
+            intent.putExtra("time", timeInfo);
+            intent.putExtra("vehicle", finalVehicleInfo);
+            intent.putExtra("center", finalCenterInfo);
+            intent.putExtra("status", status);
+            startActivity(intent);
+        });
 
         llAppointmentsContainer.addView(cardView);
     }

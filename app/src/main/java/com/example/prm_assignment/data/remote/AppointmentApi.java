@@ -24,12 +24,13 @@ public interface AppointmentApi {
     );
 
     /**
-     * 🟢 Lấy danh sách các cuộc hẹn
-     * Endpoint: GET /api/appointments
+     * 🟢 Lấy danh sách các cuộc hẹn với populate để lấy thông tin chi tiết
+     * Endpoint: GET /api/appointments?populate=vehicle_id,center_id
      */
     @GET("appointments")
     Call<AppointmentsResponse> getAppointments(
             @Header("Authorization") String token,
-            @Query("customer_id") String customerId
+            @Query("customer_id") String customerId,
+            @Query("populate") String populate
     );
 }
